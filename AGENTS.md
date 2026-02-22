@@ -132,3 +132,57 @@ cd web && npm run build
 - **PR to main**: Run integration tests
 - **Merge to main**: Deploy to staging
 - **Tag release**: Deploy to production
+
+## Docker & Podman Development
+
+### Building and Running Locally
+
+```bash
+# Build the backend
+podman build -f api/Dockerfile -t wws-api .
+
+# Build the frontend
+podman build -f web/Dockerfile -t wws-web .
+
+# Run with podman compose
+podman compose up -d
+
+# View logs
+podman compose logs -f
+
+# Stop services
+podman compose down
+```
+
+### Directory Structure
+
+```
+wws/
+├── api/              # Go backend
+│   ├── Dockerfile    # Backend container
+│   ├── handlers/     # HTTP handlers
+│   ├── middleware/   # Auth, logging, etc.
+│   ├── models/       # Database models
+│   └── main.go
+├── web/              # React frontend
+│   ├── Dockerfile    # Frontend container
+│   ├── src/
+│   └── public/
+├── provisioner/      # Provider implementations
+│   ├── podman/
+│   ├── kvm/
+│   └── digitalocean/
+├── workspace-agent/  # Inside workspace code
+├── languages/        # Language modules
+├── scripts/          # Provisioning scripts
+├── docs/             # Documentation
+├── tests/            # Integration tests
+├── docker-compose.yml
+└── AGENTS.md         # This file
+```
+
+### Container Orchestration Roadmap
+
+- **Current**: Podman for local development
+- **Future**: Kubernetes for production deployment
+- **Approach**: Modular architecture supporting both
