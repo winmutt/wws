@@ -48,7 +48,7 @@ jobs:
     
     - name: Build Go backend
       run: |
-        cd api && go build -o wws ./cmd/main.go
+        go build -o wws ./cmd/main.go
     
     - name: Build React frontend
       run: |
