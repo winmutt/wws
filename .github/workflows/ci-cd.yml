@@ -30,6 +30,10 @@ jobs:
     - name: Install dependencies
       working-directory: web
       run: npm install --legacy-peer-deps
+  
+    - name: Build React frontend
+      working-directory: web
+      run: npm run build
     
     - name: Run Go tests
       run: |
@@ -49,10 +53,6 @@ jobs:
     - name: Build Go backend
       run: |
         go build -o wws ./api/cmd/main.go
-    
-    - name: Build React frontend
-      run: |
-        cd web && npm run build
     
     - name: Upload coverage
       uses: actions/upload-artifact@v4
