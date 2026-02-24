@@ -51,8 +51,8 @@ jobs:
         go build -o wws ./api/cmd/main.go
     
     - name: Build React frontend
-      working-directory: web
-      run: npm run build
+      run: |
+        cd web && npm run build
     
     - name: Upload coverage
       uses: actions/upload-artifact@v4
