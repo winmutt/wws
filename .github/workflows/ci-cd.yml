@@ -33,10 +33,11 @@ jobs:
     
     - name: Run Go tests
       run: |
-        go test ./api/... -v -coverprofile=coverage.out
+        cd api && go test ./... -v -coverprofile=../coverage.out
     
     - name: Run Go vet
-      run: go vet ./api/...
+      run: |
+        cd api && go vet ./...
     
     - name: Run Go fmt check
       run: |
@@ -46,7 +47,8 @@ jobs:
         fi
     
     - name: Build Go backend
-      run: go build ./cmd/main.go
+      run: |
+        cd api && go build -o wws ./cmd/main.go
     
     - name: Build React frontend
       run: |
