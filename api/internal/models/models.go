@@ -19,17 +19,17 @@ type User struct {
 }
 
 type Workspace struct {
-	ID           int       `db:"id" json:"id"`
-	Tag          string    `db:"tag" json:"tag"`
-	Name         string    `db:"name" json:"name"`
-	OrganizationID int       `db:"organization_id" json:"organization_id"`
-	OwnerID      int       `db:"owner_id" json:"owner_id"`
-	Provider     string    `db:"provider" json:"provider"`
-	Status       string    `db:"status" json:"status"`
-	Config       string    `db:"config" json:"config"`
-	CreatedAt    time.Time `db:"created_at" json:"created_at"`
-	UpdatedAt    time.Time `db:"updated_at" json:"updated_at"`
-	DeletedAt    *time.Time `db:"deleted_at" json:"deleted_at,omitempty"`
+	ID             int        `db:"id" json:"id"`
+	Tag            string     `db:"tag" json:"tag"`
+	Name           string     `db:"name" json:"name"`
+	OrganizationID int        `db:"organization_id" json:"organization_id"`
+	OwnerID        int        `db:"owner_id" json:"owner_id"`
+	Provider       string     `db:"provider" json:"provider"`
+	Status         string     `db:"status" json:"status"`
+	Config         string     `db:"config" json:"config"`
+	CreatedAt      time.Time  `db:"created_at" json:"created_at"`
+	UpdatedAt      time.Time  `db:"updated_at" json:"updated_at"`
+	DeletedAt      *time.Time `db:"deleted_at" json:"deleted_at,omitempty"`
 }
 
 type WorkspaceLanguage struct {
