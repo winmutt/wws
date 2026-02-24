@@ -28,8 +28,8 @@ jobs:
         node-version: ${{ env.NODE_VERSION }}
     
     - name: Install dependencies
-      run: |
-        cd web && npm install --legacy-peer-deps
+      working-directory: web
+      run: npm install --legacy-peer-deps
     
     - name: Run Go tests
       run: |
@@ -51,8 +51,8 @@ jobs:
         go build -o wws ./api/cmd/main.go
     
     - name: Build React frontend
-      run: |
-        cd web && npm run build
+      working-directory: web
+      run: npm run build
     
     - name: Upload coverage
       uses: actions/upload-artifact@v4
