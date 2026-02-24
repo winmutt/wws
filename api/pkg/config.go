@@ -6,10 +6,10 @@ import (
 )
 
 type Config struct {
-	Server      ServerConfig
-	Database    DatabaseConfig
-	GitHub      GitHubConfig
-	Workspaces  WorkspaceConfig
+	Server     ServerConfig
+	Database   DatabaseConfig
+	GitHub     GitHubConfig
+	Workspaces WorkspaceConfig
 }
 
 type ServerConfig struct {
@@ -32,10 +32,10 @@ type GitHubConfig struct {
 }
 
 type WorkspaceConfig struct {
-	IdleTimeoutHours    int
-	DefaultStorageGB    int
-	DefaultCPU          int
-	DefaultMemoryGB     int
+	IdleTimeoutHours int
+	DefaultStorageGB int
+	DefaultCPU       int
+	DefaultMemoryGB  int
 }
 
 func LoadConfig() (*Config, error) {

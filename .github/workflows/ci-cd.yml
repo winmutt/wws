@@ -1,0 +1,73 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [main, feature/**]
+  pull_request:
+    branches: [main]
+
+env:
+  GO_VERSION: '1.21'
+  NODE_VERSION: '20'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: ${{ env.GO_VERSION }}
+    
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+    
+    - name: Install dependencies
+      run: |
+        cd web && npm install --legacy-peer-deps
+  
+    - name: Build React frontend
+      run: |
+        cd web && npm run build
+    
+    - name: Run Go tests
+      run: |
+        cd api && go test ./... -v -coverprofile=../coverage.out
+    
+    - name: Run Go vet
+      run: |
+        cd api && go vet ./...
+    
+    - name: Run Go fmt check
+      run: |
+        if [ -n "$(gofmt -l $(find . -name '*.go' -not -path './vendor/*'))" ]; then
+          echo "Code not formatted"
+          exit 1
+        fi
+    
+    - name: Build Go backend
+      run: |
+        go build -o wws ./api/cmd/main.go
+    
+    - name: Upload coverage
+      uses: actions/upload-artifact@v4
+      with:
+        name: coverage
+        path: coverage.out
+
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Deploy to staging
+      run: |
+        echo "Deploying to staging environment"
