@@ -80,12 +80,44 @@ func createTables() {
 		FOREIGN KEY (invited_by) REFERENCES users(id)
 	);`
 
+	oauthTokensTable := `
+	CREATE TABLE IF NOT EXISTS oauth_tokens (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		user_id INTEGER NOT NULL UNIQUE,
+		access_token TEXT NOT NULL,
+		refresh_token TEXT,
+		expiry DATETIME NOT NULL,
+		created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+		updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+		FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+	);`
+
+	sessionsTable := `
+	CREATE TABLE IF NOT EXISTS sessions (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		user_id INTEGER NOT NULL,
+		token TEXT UNIQUE NOT NULL,
+		expires_at DATETIME NOT NULL,
+		created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+		FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+	);`
+
+	oauthStatesTable := `
+	CREATE TABLE IF NOT EXISTS oauth_states (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		state TEXT UNIQUE NOT NULL,
+		created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+	);`
+
 	statements := []string{
 		usersTable,
 		organizationsTable,
 		workspacesTable,
 		workspaceLanguagesTable,
 		membersTable,
+		oauthTokensTable,
+		sessionsTable,
+		oauthStatesTable,
 	}
 
 	for _, stmt := range statements {

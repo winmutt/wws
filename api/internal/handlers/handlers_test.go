@@ -1,12 +1,70 @@
 package handlers
 
 import (
+	"database/sql"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"strings"
 	"testing"
+
+	_ "github.com/mattn/go-sqlite3"
 )
+
+var testDB2 *sql.DB
+
+func TestMain(m *testing.M) {
+	var err error
+	testDB2, err = sql.Open("sqlite3", ":memory:")
+	if err != nil {
+		panic(err)
+	}
+
+	statements := []string{
+		`CREATE TABLE IF NOT EXISTS users (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			github_id TEXT UNIQUE NOT NULL,
+			username TEXT NOT NULL,
+			email TEXT,
+			created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+		)`,
+		`CREATE TABLE IF NOT EXISTS oauth_tokens (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			user_id INTEGER NOT NULL UNIQUE,
+			access_token TEXT NOT NULL,
+			refresh_token TEXT,
+			expiry DATETIME NOT NULL,
+			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+			updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+			FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+		)`,
+		`CREATE TABLE IF NOT EXISTS sessions (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			user_id INTEGER NOT NULL,
+			token TEXT UNIQUE NOT NULL,
+			expires_at DATETIME NOT NULL,
+			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+			FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+		)`,
+		`CREATE TABLE IF NOT EXISTS oauth_states (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			state TEXT UNIQUE NOT NULL,
+			created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+		)`,
+	}
+
+	for _, stmt := range statements {
+		_, err := testDB2.Exec(stmt)
+		if err != nil {
+			panic(err)
+		}
+	}
+
+	code := m.Run()
+
+	testDB2.Close()
+	os.Exit(code)
+}
 
 func TestHealthHandler(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/health", nil)
@@ -46,7 +104,12 @@ func TestOAuthCallbackHandlerMissingCode(t *testing.T) {
 	os.Setenv("GITHUB_CLIENT_SECRET", "test-client-secret")
 	os.Setenv("GITHUB_CALLBACK_URL", "http://localhost:8080/oauth/callback")
 
-	req := httptest.NewRequest(http.MethodGet, "/auth/github/callback?state=gh_teststate", nil)
+	InitOAuthStateStore()
+	SetOAuthDB(testDB2)
+	state, _ := generateStateToken()
+	StoreOAuthState(state)
+
+	req := httptest.NewRequest(http.MethodGet, "/auth/github/callback?state="+state, nil)
 	w := httptest.NewRecorder()
 
 	err := OAuthCallbackHandler(w, req)
@@ -65,6 +128,9 @@ func TestOAuthCallbackHandlerInvalidState(t *testing.T) {
 	os.Setenv("GITHUB_CLIENT_SECRET", "test-client-secret")
 	os.Setenv("GITHUB_CALLBACK_URL", "http://localhost:8080/oauth/callback")
 
+	InitOAuthStateStore()
+	SetOAuthDB(testDB2)
+
 	req := httptest.NewRequest(http.MethodGet, "/auth/github/callback?code=testcode&state=invalidstate", nil)
 	w := httptest.NewRecorder()
 
@@ -73,9 +139,8 @@ func TestOAuthCallbackHandlerInvalidState(t *testing.T) {
 		t.Error("Expected error for invalid state parameter")
 	}
 
-	expectedMsg := "invalid state parameter"
-	if err.Error() != expectedMsg {
-		t.Errorf("Expected error '%s', got '%s'", expectedMsg, err.Error())
+	if !strings.Contains(err.Error(), "invalid or expired state") {
+		t.Errorf("Expected state validation error, got '%s'", err.Error())
 	}
 }
 
@@ -84,7 +149,12 @@ func TestOAuthCallbackHandlerValidStateInvalidCode(t *testing.T) {
 	os.Setenv("GITHUB_CLIENT_SECRET", "test-client-secret")
 	os.Setenv("GITHUB_CALLBACK_URL", "http://localhost:8080/oauth/callback")
 
-	req := httptest.NewRequest(http.MethodGet, "/auth/github/callback?code=invalidcode&state=gh_teststate", nil)
+	InitOAuthStateStore()
+	SetOAuthDB(testDB2)
+	state, _ := generateStateToken()
+	StoreOAuthState(state)
+
+	req := httptest.NewRequest(http.MethodGet, "/auth/github/callback?code=invalidcode&state="+state, nil)
 	w := httptest.NewRecorder()
 
 	err := OAuthCallbackHandler(w, req)

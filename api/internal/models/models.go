@@ -39,3 +39,27 @@ type WorkspaceLanguage struct {
 	Version       string `db:"version" json:"version"`
 	InstallScript string `db:"install_script" json:"install_script"`
 }
+
+type OAuthToken struct {
+	ID           int       `db:"id" json:"id"`
+	UserID       int       `db:"user_id" json:"user_id"`
+	AccessToken  string    `db:"access_token" json:"access_token"`
+	RefreshToken string    `db:"refresh_token" json:"refresh_token"`
+	Expiry       time.Time `db:"expiry" json:"expiry"`
+	CreatedAt    time.Time `db:"created_at" json:"created_at"`
+	UpdatedAt    time.Time `db:"updated_at" json:"updated_at"`
+}
+
+type Session struct {
+	ID        int       `db:"id" json:"id"`
+	UserID    int       `db:"user_id" json:"user_id"`
+	Token     string    `db:"token" json:"token"`
+	ExpiresAt time.Time `db:"expires_at" json:"expires_at"`
+	CreatedAt time.Time `db:"created_at" json:"created_at"`
+}
+
+type OAuthState struct {
+	ID        int       `db:"id" json:"id"`
+	State     string    `db:"state" json:"state"`
+	CreatedAt time.Time `db:"created_at" json:"created_at"`
+}
