@@ -8,6 +8,8 @@ import (
 
 	"github.com/gorilla/mux"
 
+	"wws/api/internal/db"
+	"wws/api/internal/handlers"
 	"wws/api/internal/middleware"
 	"wws/api/internal/routes"
 	"wws/api/pkg"
@@ -18,6 +20,11 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to load config: %v", err)
 	}
+
+	db.Init(config.Database.Path)
+	defer db.Close()
+
+	handlers.InitOAuthStateStore()
 
 	r := mux.NewRouter()
 

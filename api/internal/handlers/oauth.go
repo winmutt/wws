@@ -3,15 +3,18 @@ package handlers
 import (
 	"context"
 	"crypto/rand"
+	"crypto/sha256"
+	"database/sql"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
 	"os"
-	"strings"
 	"sync"
 	"time"
+
+	"wws/api/internal/db"
 
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/github"
@@ -20,6 +23,9 @@ import (
 var (
 	githubOAuthConfig *oauth2.Config
 	once              sync.Once
+	stateStore        map[string]bool
+	stateStoreMutex   sync.RWMutex
+	oauthDB           *sql.DB
 )
 
 func getGitHubOAuthConfig() *oauth2.Config {
@@ -57,6 +63,89 @@ func generateStateToken() (string, error) {
 	return base64.URLEncoding.EncodeToString(b), nil
 }
 
+func InitOAuthStateStore() {
+	stateStore = make(map[string]bool)
+	oauthDB = db.DB
+}
+
+func SetOAuthDB(db *sql.DB) {
+	oauthDB = db
+}
+
+func StoreOAuthState(state string) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	hash := sha256.Sum256([]byte(state))
+	hashStr := base64.URLEncoding.EncodeToString(hash[:])
+
+	_, err := oauthDB.ExecContext(ctx,
+		"INSERT INTO oauth_states (state) VALUES (?)",
+		hashStr,
+	)
+	if err != nil {
+		return fmt.Errorf("failed to store OAuth state: %w", err)
+	}
+
+	stateStoreMutex.Lock()
+	stateStore[hashStr] = true
+	stateStoreMutex.Unlock()
+
+	go cleanupExpiredStates()
+
+	return nil
+}
+
+func ValidateOAuthState(state string) bool {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	hash := sha256.Sum256([]byte(state))
+	hashStr := base64.URLEncoding.EncodeToString(hash[:])
+
+	stateStoreMutex.RLock()
+	if stateStore[hashStr] {
+		stateStoreMutex.RUnlock()
+		oauthDB.ExecContext(ctx, "DELETE FROM oauth_states WHERE state = ?", hashStr)
+		stateStoreMutex.Lock()
+		delete(stateStore, hashStr)
+		stateStoreMutex.Unlock()
+		return true
+	}
+	stateStoreMutex.RUnlock()
+
+	var exists int
+	err := oauthDB.QueryRowContext(ctx, "SELECT 1 FROM oauth_states WHERE state = ?", hashStr).Scan(&exists)
+	if err == nil {
+		oauthDB.ExecContext(ctx, "DELETE FROM oauth_states WHERE state = ?", hashStr)
+		return true
+	}
+
+	return false
+}
+
+func cleanupExpiredStates() {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	_, err := oauthDB.ExecContext(ctx,
+		"DELETE FROM oauth_states WHERE created_at < datetime('now', '-10 minutes')",
+	)
+	if err != nil {
+		log.Printf("Failed to cleanup expired OAuth states: %v", err)
+	}
+
+	stateStoreMutex.Lock()
+	for state, _ := range stateStore {
+		var exists int
+		err := oauthDB.QueryRowContext(ctx, "SELECT 1 FROM oauth_states WHERE state = ?", state).Scan(&exists)
+		if err != nil {
+			delete(stateStore, state)
+		}
+	}
+	stateStoreMutex.Unlock()
+}
+
 func OAuthCallbackHandler(w http.ResponseWriter, r *http.Request) error {
 	ctx, cancel := context.WithTimeout(r.Context(), 30*time.Second)
 	defer cancel()
@@ -66,8 +155,8 @@ func OAuthCallbackHandler(w http.ResponseWriter, r *http.Request) error {
 		return fmt.Errorf("missing state parameter")
 	}
 
-	if !strings.HasPrefix(state, "gh_") {
-		return fmt.Errorf("invalid state parameter")
+	if !ValidateOAuthState(state) {
+		return fmt.Errorf("invalid or expired state parameter")
 	}
 
 	code := r.URL.Query().Get("code")
@@ -87,7 +176,16 @@ func OAuthCallbackHandler(w http.ResponseWriter, r *http.Request) error {
 		return fmt.Errorf("failed to get user info: %w", err)
 	}
 
-	sessionToken, err := createSession(ctx, token, user)
+	userID, err := findOrCreateUser(ctx, user)
+	if err != nil {
+		return fmt.Errorf("failed to create user: %w", err)
+	}
+
+	if err := storeOAuthToken(ctx, userID, token); err != nil {
+		return fmt.Errorf("failed to store OAuth token: %w", err)
+	}
+
+	sessionToken, err := createSession(ctx, userID, user)
 	if err != nil {
 		return fmt.Errorf("failed to create session: %w", err)
 	}
@@ -125,55 +223,99 @@ func getUserInfo(ctx context.Context, client *http.Client) (map[string]interface
 	return user, nil
 }
 
-func createSession(ctx context.Context, token *oauth2.Token, user map[string]interface{}) (string, error) {
-	githubID, ok := user["id"].(string)
-	if !ok {
-		return "", fmt.Errorf("invalid github ID")
-	}
-
-	username, ok := user["login"].(string)
-	if !ok {
-		return "", fmt.Errorf("invalid username")
-	}
-
-	_, _ = getPrimaryEmail(ctx, token)
-
-	sessionToken := generateSessionToken()
-
-	log.Printf("OAuth session created for user: %s (%s)", username, githubID)
-
-	return sessionToken, nil
-}
-
-func getPrimaryEmail(ctx context.Context, token *oauth2.Token) (string, error) {
-	config := getGitHubOAuthConfig()
-	client := config.Client(ctx, token)
-	resp, err := client.Get("https://api.github.com/user/emails")
-	if err != nil {
-		return "", fmt.Errorf("failed to fetch emails: %w", err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("github API returned status %d", resp.StatusCode)
-	}
-
-	var emails []map[string]interface{}
-	if err := json.NewDecoder(resp.Body).Decode(&emails); err != nil {
-		return "", fmt.Errorf("failed to decode emails: %w", err)
-	}
-
-	for _, email := range emails {
-		if email["primary"].(bool) {
-			return email["email"].(string), nil
-		}
-	}
-
-	return "", nil
-}
-
 func generateSessionToken() string {
 	b := make([]byte, 32)
 	rand.Read(b)
 	return base64.URLEncoding.EncodeToString(b)
+}
+
+func findOrCreateUser(ctx context.Context, user map[string]interface{}) (int, error) {
+	githubID, ok := user["id"].(float64)
+	if !ok {
+		return 0, fmt.Errorf("invalid github ID type")
+	}
+	githubIDStr := fmt.Sprintf("%.0f", githubID)
+
+	username, ok := user["login"].(string)
+	if !ok {
+		return 0, fmt.Errorf("invalid username")
+	}
+
+	var email string
+	emailVal, exists := user["email"]
+	if exists && emailVal != nil {
+		email = emailVal.(string)
+	}
+
+	var existingUserID int
+	err := oauthDB.QueryRowContext(ctx,
+		"SELECT id FROM users WHERE github_id = ?",
+		githubIDStr,
+	).Scan(&existingUserID)
+	if err == nil {
+		return existingUserID, nil
+	}
+
+	result, err := oauthDB.ExecContext(ctx,
+		"INSERT INTO users (github_id, username, email) VALUES (?, ?, ?)",
+		githubIDStr, username, email,
+	)
+	if err != nil {
+		return 0, fmt.Errorf("failed to insert user: %w", err)
+	}
+
+	id, err := result.LastInsertId()
+	if err != nil {
+		return 0, fmt.Errorf("failed to get user ID: %w", err)
+	}
+
+	log.Printf("Created new user: %s (%s)", username, githubIDStr)
+
+	return int(id), nil
+}
+
+func storeOAuthToken(ctx context.Context, userID int, token *oauth2.Token) error {
+	expiry := token.Expiry
+	if expiry.IsZero() {
+		expiry = time.Now().Add(3600 * time.Second)
+	}
+
+	_, err := oauthDB.ExecContext(ctx,
+		`INSERT INTO oauth_tokens (user_id, access_token, refresh_token, expiry)
+		 VALUES (?, ?, ?, ?)
+		 ON CONFLICT(user_id) DO UPDATE SET
+		 access_token = excluded.access_token,
+		 refresh_token = excluded.refresh_token,
+		 expiry = excluded.expiry,
+		 updated_at = CURRENT_TIMESTAMP`,
+		userID,
+		token.AccessToken,
+		token.RefreshToken,
+		expiry,
+	)
+	if err != nil {
+		return fmt.Errorf("failed to store OAuth token: %w", err)
+	}
+
+	log.Printf("Stored OAuth token for user ID: %d", userID)
+
+	return nil
+}
+
+func createSession(ctx context.Context, userID int, user map[string]interface{}) (string, error) {
+	sessionToken := generateSessionToken()
+	expiresAt := time.Now().Add(7 * 24 * time.Hour)
+
+	_, err := oauthDB.ExecContext(ctx,
+		"INSERT INTO sessions (user_id, token, expires_at) VALUES (?, ?, ?)",
+		userID, sessionToken, expiresAt,
+	)
+	if err != nil {
+		return "", fmt.Errorf("failed to store session: %w", err)
+	}
+
+	username, _ := user["login"].(string)
+	log.Printf("Created session for user: %s (ID: %d)", username, userID)
+
+	return sessionToken, nil
 }

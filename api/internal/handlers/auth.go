@@ -16,6 +16,10 @@ func GitHubAuthHandler(w http.ResponseWriter, r *http.Request) error {
 		return fmt.Errorf("failed to generate state: %w", err)
 	}
 
+	if err := StoreOAuthState(state); err != nil {
+		return fmt.Errorf("failed to store OAuth state: %w", err)
+	}
+
 	authURL := config.AuthCodeURL(state)
 	http.Redirect(w, r, authURL, http.StatusFound)
 	return nil
