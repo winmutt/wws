@@ -13,9 +13,9 @@
 ### 1.2 Authentication & Organization - In Progress
 - [x] 1.2.1 Implement GitHub OAuth2 callback handler (#214, PR #215)
 - [x] 1.2.2 Store OAuth tokens securely (PR #217)
-- [ ] 1.2.3 Create user session management
-- [ ] 1.2.4 Implement organization creation endpoint
-- [ ] 1.2.5 Implement organization CRUD operations
+- [x] 1.2.3 Create user session management (PR #218)
+- [x] 1.2.4 Implement organization creation endpoint (PR #219)
+- [x] 1.2.5 Implement organization CRUD operations (PR #220)
 - [ ] 1.2.6 Create user invitation system
 - [ ] 1.2.7 Implement acceptance workflow for invitations
 - [ ] 1.2.8 Build team-based access control (RBAC)
