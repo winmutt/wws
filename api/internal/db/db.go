@@ -84,8 +84,10 @@ func createTables() {
 	CREATE TABLE IF NOT EXISTS oauth_tokens (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
 		user_id INTEGER NOT NULL UNIQUE,
-		access_token TEXT NOT NULL,
+		access_token TEXT,
+		encrypted_access_token TEXT,
 		refresh_token TEXT,
+		encrypted_refresh_token TEXT,
 		expiry DATETIME NOT NULL,
 		created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 		updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
