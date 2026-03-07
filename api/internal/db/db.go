@@ -49,6 +49,7 @@ func createTables() {
 		provider TEXT NOT NULL,
 		status TEXT NOT NULL,
 		config TEXT,
+		region TEXT,
 		created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 		updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 		deleted_at DATETIME,

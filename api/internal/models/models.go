@@ -27,6 +27,7 @@ type Workspace struct {
 	Provider       string     `db:"provider" json:"provider"`
 	Status         string     `db:"status" json:"status"`
 	Config         string     `db:"config" json:"config"`
+	Region         string     `db:"region" json:"region"`
 	CreatedAt      time.Time  `db:"created_at" json:"created_at"`
 	UpdatedAt      time.Time  `db:"updated_at" json:"updated_at"`
 	DeletedAt      *time.Time `db:"deleted_at" json:"deleted_at,omitempty"`
