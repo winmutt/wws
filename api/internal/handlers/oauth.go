@@ -14,6 +14,7 @@ import (
 	"sync"
 	"time"
 
+	"wws/api/internal/crypto"
 	"wws/api/internal/db"
 
 	"golang.org/x/oauth2"
@@ -66,6 +67,10 @@ func generateStateToken() (string, error) {
 func InitOAuthStateStore() {
 	stateStore = make(map[string]bool)
 	oauthDB = db.DB
+
+	if err := crypto.InitEncryption(); err != nil {
+		log.Printf("Warning: %v", err)
+	}
 }
 
 func SetOAuthDB(db *sql.DB) {
@@ -91,7 +96,9 @@ func StoreOAuthState(state string) error {
 	stateStore[hashStr] = true
 	stateStoreMutex.Unlock()
 
-	go cleanupExpiredStates()
+	if os.Getenv("WWS_TEST_MODE") != "true" {
+		go cleanupExpiredStates()
+	}
 
 	return nil
 }
@@ -280,24 +287,42 @@ func storeOAuthToken(ctx context.Context, userID int, token *oauth2.Token) error
 		expiry = time.Now().Add(3600 * time.Second)
 	}
 
-	_, err := oauthDB.ExecContext(ctx,
-		`INSERT INTO oauth_tokens (user_id, access_token, refresh_token, expiry)
-		 VALUES (?, ?, ?, ?)
+	encryptedAccessToken, err := crypto.Encrypt(token.AccessToken)
+	if err != nil {
+		return fmt.Errorf("failed to encrypt access token: %w", err)
+	}
+
+	var encryptedRefreshToken interface{}
+	if token.RefreshToken != "" {
+		encryptedRT, err := crypto.Encrypt(token.RefreshToken)
+		if err != nil {
+			return fmt.Errorf("failed to encrypt refresh token: %w", err)
+		}
+		encryptedRefreshToken = encryptedRT
+	} else {
+		encryptedRefreshToken = nil
+	}
+
+	_, err = oauthDB.ExecContext(ctx,
+		`INSERT INTO oauth_tokens (user_id, access_token, encrypted_access_token, refresh_token, encrypted_refresh_token, expiry)
+		 VALUES (?, ?, ?, ?, ?, ?)
 		 ON CONFLICT(user_id) DO UPDATE SET
-		 access_token = excluded.access_token,
-		 refresh_token = excluded.refresh_token,
+		 encrypted_access_token = excluded.encrypted_access_token,
+		 encrypted_refresh_token = excluded.encrypted_refresh_token,
 		 expiry = excluded.expiry,
 		 updated_at = CURRENT_TIMESTAMP`,
 		userID,
-		token.AccessToken,
-		token.RefreshToken,
+		nil,
+		encryptedAccessToken,
+		nil,
+		encryptedRefreshToken,
 		expiry,
 	)
 	if err != nil {
 		return fmt.Errorf("failed to store OAuth token: %w", err)
 	}
 
-	log.Printf("Stored OAuth token for user ID: %d", userID)
+	log.Printf("Stored encrypted OAuth token for user ID: %d", userID)
 
 	return nil
 }
@@ -318,4 +343,45 @@ func createSession(ctx context.Context, userID int, user map[string]interface{})
 	log.Printf("Created session for user: %s (ID: %d)", username, userID)
 
 	return sessionToken, nil
+}
+
+func GetOAuthToken(ctx context.Context, userID int) (*oauth2.Token, error) {
+	var encryptedAccessToken, encryptedRefreshToken sql.NullString
+	var expiry time.Time
+
+	err := oauthDB.QueryRowContext(ctx,
+		`SELECT encrypted_access_token, encrypted_refresh_token, expiry 
+		 FROM oauth_tokens WHERE user_id = ?`,
+		userID,
+	).Scan(&encryptedAccessToken, &encryptedRefreshToken, &expiry)
+
+	if err == sql.ErrNoRows {
+		return nil, fmt.Errorf("no OAuth token found for user ID: %d", userID)
+	}
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch OAuth token: %w", err)
+	}
+
+	if !encryptedAccessToken.Valid {
+		return nil, fmt.Errorf("access token not found")
+	}
+
+	decryptedAccessToken, err := crypto.Decrypt(encryptedAccessToken.String)
+	if err != nil {
+		return nil, fmt.Errorf("failed to decrypt access token: %w", err)
+	}
+
+	var decryptedRefreshToken string
+	if encryptedRefreshToken.Valid && encryptedRefreshToken.String != "" {
+		decryptedRefreshToken, err = crypto.Decrypt(encryptedRefreshToken.String)
+		if err != nil {
+			return nil, fmt.Errorf("failed to decrypt refresh token: %w", err)
+		}
+	}
+
+	return &oauth2.Token{
+		AccessToken:  decryptedAccessToken,
+		RefreshToken: decryptedRefreshToken,
+		Expiry:       expiry,
+	}, nil
 }

@@ -42,13 +42,15 @@ type WorkspaceLanguage struct {
 }
 
 type OAuthToken struct {
-	ID           int       `db:"id" json:"id"`
-	UserID       int       `db:"user_id" json:"user_id"`
-	AccessToken  string    `db:"access_token" json:"access_token"`
-	RefreshToken string    `db:"refresh_token" json:"refresh_token"`
-	Expiry       time.Time `db:"expiry" json:"expiry"`
-	CreatedAt    time.Time `db:"created_at" json:"created_at"`
-	UpdatedAt    time.Time `db:"updated_at" json:"updated_at"`
+	ID                    int       `db:"id" json:"id"`
+	UserID                int       `db:"user_id" json:"user_id"`
+	AccessToken           string    `db:"access_token" json:"-"`
+	EncryptedAccessToken  string    `db:"encrypted_access_token" json:"-"`
+	RefreshToken          string    `db:"refresh_token" json:"-"`
+	EncryptedRefreshToken string    `db:"encrypted_refresh_token" json:"-"`
+	Expiry                time.Time `db:"expiry" json:"expiry"`
+	CreatedAt             time.Time `db:"created_at" json:"created_at"`
+	UpdatedAt             time.Time `db:"updated_at" json:"updated_at"`
 }
 
 type Session struct {

@@ -8,6 +8,8 @@ import (
 	"strings"
 	"testing"
 
+	"wws/api/internal/crypto"
+
 	_ "github.com/mattn/go-sqlite3"
 )
 
@@ -20,6 +22,10 @@ func TestMain(m *testing.M) {
 		panic(err)
 	}
 
+	os.Setenv("WWS_ENCRYPTION_KEY", "test-encryption-key-for-tests")
+	os.Setenv("WWS_TEST_MODE", "true")
+	crypto.InitEncryption()
+
 	statements := []string{
 		`CREATE TABLE IF NOT EXISTS users (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -31,12 +37,13 @@ func TestMain(m *testing.M) {
 		`CREATE TABLE IF NOT EXISTS oauth_tokens (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
 			user_id INTEGER NOT NULL UNIQUE,
-			access_token TEXT NOT NULL,
+			access_token TEXT,
+			encrypted_access_token TEXT,
 			refresh_token TEXT,
+			encrypted_refresh_token TEXT,
 			expiry DATETIME NOT NULL,
 			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-			updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-			FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+			updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 		)`,
 		`CREATE TABLE IF NOT EXISTS sessions (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -59,6 +66,9 @@ func TestMain(m *testing.M) {
 			panic(err)
 		}
 	}
+
+	InitOAuthStateStore()
+	SetOAuthDB(testDB2)
 
 	code := m.Run()
 
