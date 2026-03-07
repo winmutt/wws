@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"wws/api/internal/crypto"
+	"wws/api/internal/db"
 
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -53,6 +54,13 @@ func TestMain(m *testing.M) {
 			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 			FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 		)`,
+		`CREATE TABLE IF NOT EXISTS organizations (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			name TEXT NOT NULL,
+			owner_id INTEGER NOT NULL,
+			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+			updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+		)`,
 		`CREATE TABLE IF NOT EXISTS oauth_states (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
 			state TEXT UNIQUE NOT NULL,
@@ -69,6 +77,7 @@ func TestMain(m *testing.M) {
 
 	InitOAuthStateStore()
 	SetOAuthDB(testDB2)
+	db.DB = testDB2
 
 	code := m.Run()
 

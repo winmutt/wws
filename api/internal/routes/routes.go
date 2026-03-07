@@ -26,11 +26,6 @@ func SetupRoutes(r *mux.Router) {
 	orgs := api.PathPrefix("/organizations").Subrouter()
 	orgs.HandleFunc("", handlers.Adapter(handlers.ListOrganizationsHandler)).Methods("GET")
 	orgs.HandleFunc("", handlers.Adapter(handlers.CreateOrganizationHandler)).Methods("POST")
-	orgs.HandleFunc("/{id}", handlers.Adapter(handlers.GetOrganizationHandler)).Methods("GET")
-	orgs.HandleFunc("/{id}", handlers.Adapter(handlers.UpdateOrganizationHandler)).Methods("PUT")
-	orgs.HandleFunc("/{id}", handlers.Adapter(handlers.DeleteOrganizationHandler)).Methods("DELETE")
-	orgs.HandleFunc("/{id}/invitations", handlers.Adapter(handlers.CreateInvitationHandler)).Methods("POST")
-	orgs.HandleFunc("/invitations/{id}/accept", handlers.Adapter(handlers.AcceptInvitationHandler)).Methods("POST")
 
 	// Workspace routes
 	workspaces := api.PathPrefix("/workspaces").Subrouter()
