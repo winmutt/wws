@@ -26,13 +26,3 @@ func DeleteOrganizationHandler(w http.ResponseWriter, r *http.Request) error {
 	WriteJSON(w, http.StatusOK, map[string]string{"message": "Delete organization"})
 	return nil
 }
-
-func CreateInvitationHandler(w http.ResponseWriter, r *http.Request) error {
-	WriteJSON(w, http.StatusOK, map[string]string{"message": "Create invitation"})
-	return nil
-}
-
-func AcceptInvitationHandler(w http.ResponseWriter, r *http.Request) error {
-	WriteJSON(w, http.StatusOK, map[string]string{"message": "Accept invitation"})
-	return nil
-}

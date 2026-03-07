@@ -385,3 +385,135 @@ func GetOAuthToken(ctx context.Context, userID int) (*oauth2.Token, error) {
 		Expiry:       expiry,
 	}, nil
 }
+
+func validateSession(token string) (int, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	var userID int
+	var expiresAt time.Time
+
+	err := oauthDB.QueryRowContext(ctx,
+		`SELECT user_id, expires_at FROM sessions WHERE token = ?`,
+		token,
+	).Scan(&userID, &expiresAt)
+
+	if err == sql.ErrNoRows {
+		return 0, fmt.Errorf("session not found")
+	}
+	if err != nil {
+		return 0, fmt.Errorf("failed to fetch session: %w", err)
+	}
+
+	if time.Now().After(expiresAt) {
+		return 0, fmt.Errorf("session expired")
+	}
+
+	return userID, nil
+}
+
+func ValidateSession(token string) (int, error) {
+	return validateSession(token)
+}
+
+func RefreshSession(token string) (string, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	userID, err := validateSession(token)
+	if err != nil {
+		return "", err
+	}
+
+	newToken := generateSessionToken()
+	expiresAt := time.Now().Add(7 * 24 * time.Hour)
+
+	_, err = oauthDB.ExecContext(ctx,
+		`UPDATE sessions SET token = ?, expires_at = ? WHERE user_id = ?`,
+		newToken, expiresAt, userID,
+	)
+	if err != nil {
+		return "", fmt.Errorf("failed to refresh session: %w", err)
+	}
+
+	return newToken, nil
+}
+
+func RevokeSession(token string) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	_, err := oauthDB.ExecContext(ctx,
+		`DELETE FROM sessions WHERE token = ?`,
+		token,
+	)
+	if err != nil {
+		return fmt.Errorf("failed to revoke session: %w", err)
+	}
+
+	return nil
+}
+
+func RevokeAllUserSessions(userID int) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	_, err := oauthDB.ExecContext(ctx,
+		`DELETE FROM sessions WHERE user_id = ?`,
+		userID,
+	)
+	if err != nil {
+		return fmt.Errorf("failed to revoke user sessions: %w", err)
+	}
+
+	return nil
+}
+
+func CleanupExpiredSessions() error {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	_, err := oauthDB.ExecContext(ctx,
+		`DELETE FROM sessions WHERE expires_at < ?`,
+		time.Now(),
+	)
+	if err != nil {
+		return fmt.Errorf("failed to cleanup expired sessions: %w", err)
+	}
+
+	return nil
+}
+
+func GetUserSessions(userID int) ([]map[string]interface{}, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	rows, err := oauthDB.QueryContext(ctx,
+		`SELECT id, token, expires_at, created_at FROM sessions WHERE user_id = ?`,
+		userID,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch sessions: %w", err)
+	}
+	defer rows.Close()
+
+	var sessions []map[string]interface{}
+	for rows.Next() {
+		var id int
+		var token string
+		var expiresAt, createdAt time.Time
+
+		if err := rows.Scan(&id, &token, &expiresAt, &createdAt); err != nil {
+			return nil, fmt.Errorf("failed to scan session: %w", err)
+		}
+
+		sessions = append(sessions, map[string]interface{}{
+			"id":         id,
+			"token":      token,
+			"expires_at": expiresAt,
+			"created_at": createdAt,
+		})
+	}
+
+	return sessions, nil
+}
