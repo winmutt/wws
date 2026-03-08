@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"wws/api/internal/db"
-
 )
 
 type CreateOrganizationRequest struct {
