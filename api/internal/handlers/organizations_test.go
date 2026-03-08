@@ -6,9 +6,12 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"wws/api/internal/db"
 )
 
 func TestCreateOrganizationHandler(t *testing.T) {
+	db.DB = testDB2
 	reqBody := map[string]string{"name": "Test Org"}
 	body, _ := json.Marshal(reqBody)
 
