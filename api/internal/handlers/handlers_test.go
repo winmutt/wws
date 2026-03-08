@@ -66,6 +66,14 @@ func TestMain(m *testing.M) {
 			state TEXT UNIQUE NOT NULL,
 			created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 		)`,
+		`CREATE TABLE IF NOT EXISTS organizations (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			name TEXT NOT NULL,
+			owner_id INTEGER NOT NULL,
+			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+			updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+			FOREIGN KEY (owner_id) REFERENCES users(id)
+		)`,
 	}
 
 	for _, stmt := range statements {
