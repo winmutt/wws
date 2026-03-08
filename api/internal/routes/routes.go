@@ -17,6 +17,14 @@ func SetupRoutes(r *mux.Router) {
 	auth.HandleFunc("/github", handlers.Adapter(handlers.GitHubAuthHandler)).Methods("GET")
 	auth.HandleFunc("/github/callback", handlers.Adapter(handlers.OAuthCallbackHandler)).Methods("GET")
 
+	// Session routes
+	sessions := api.PathPrefix("/sessions").Subrouter()
+	sessions.HandleFunc("", handlers.Adapter(handlers.GetSessionHandler)).Methods("GET")
+	sessions.HandleFunc("/refresh", handlers.Adapter(handlers.RefreshSessionHandler)).Methods("POST")
+	sessions.HandleFunc("/revoke", handlers.Adapter(handlers.RevokeSessionHandler)).Methods("DELETE")
+	sessions.HandleFunc("/revoke-all", handlers.Adapter(handlers.RevokeAllSessionsHandler)).Methods("DELETE")
+	sessions.HandleFunc("/user", handlers.Adapter(handlers.ListUserSessionsHandler)).Methods("GET")
+
 	// User routes
 	users := api.PathPrefix("/users").Subrouter()
 	users.HandleFunc("", handlers.Adapter(handlers.ListUsersHandler)).Methods("GET")

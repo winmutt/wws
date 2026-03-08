@@ -385,3 +385,265 @@ func GetOAuthToken(ctx context.Context, userID int) (*oauth2.Token, error) {
 		Expiry:       expiry,
 	}, nil
 }
+
+type SessionInfo struct {
+	UserID    int       `json:"user_id"`
+	ExpiresAt time.Time `json:"expires_at"`
+	CreatedAt time.Time `json:"created_at"`
+	IsValid   bool      `json:"is_valid"`
+}
+
+func ValidateSession(ctx context.Context, sessionToken string) (*SessionInfo, error) {
+	var sessionInfo SessionInfo
+	var expiresAt, createdAt time.Time
+	var userID int
+
+	err := oauthDB.QueryRowContext(ctx,
+		`SELECT user_id, expires_at, created_at FROM sessions WHERE token = ?`,
+		sessionToken,
+	).Scan(&userID, &expiresAt, &createdAt)
+
+	if err == sql.ErrNoRows {
+		return nil, fmt.Errorf("session not found")
+	}
+	if err != nil {
+		return nil, fmt.Errorf("failed to validate session: %w", err)
+	}
+
+	sessionInfo.UserID = userID
+	sessionInfo.ExpiresAt = expiresAt
+	sessionInfo.CreatedAt = createdAt
+	sessionInfo.IsValid = time.Now().Before(expiresAt)
+
+	if !sessionInfo.IsValid {
+		oauthDB.ExecContext(ctx, "DELETE FROM sessions WHERE token = ?", sessionToken)
+		return nil, fmt.Errorf("session expired")
+	}
+
+	return &sessionInfo, nil
+}
+
+func RefreshSession(ctx context.Context, sessionToken string) (*SessionInfo, error) {
+	newExpiresAt := time.Now().Add(7 * 24 * time.Hour)
+
+	_, err := oauthDB.ExecContext(ctx,
+		"UPDATE sessions SET expires_at = ? WHERE token = ?",
+		newExpiresAt, sessionToken,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to refresh session: %w", err)
+	}
+
+	var userID int
+	var createdAt time.Time
+	err = oauthDB.QueryRowContext(ctx,
+		"SELECT user_id, created_at FROM sessions WHERE token = ?",
+		sessionToken,
+	).Scan(&userID, &createdAt)
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch session after refresh: %w", err)
+	}
+
+	return &SessionInfo{
+		UserID:    userID,
+		ExpiresAt: newExpiresAt,
+		CreatedAt: createdAt,
+		IsValid:   true,
+	}, nil
+}
+
+func RevokeSession(ctx context.Context, sessionToken string) error {
+	result, err := oauthDB.ExecContext(ctx, "DELETE FROM sessions WHERE token = ?", sessionToken)
+	if err != nil {
+		return fmt.Errorf("failed to revoke session: %w", err)
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("failed to check session revocation: %w", err)
+	}
+
+	if rowsAffected == 0 {
+		return fmt.Errorf("session not found")
+	}
+
+	return nil
+}
+
+func RevokeAllUserSessions(ctx context.Context, userID int) error {
+	result, err := oauthDB.ExecContext(ctx, "DELETE FROM sessions WHERE user_id = ?", userID)
+	if err != nil {
+		return fmt.Errorf("failed to revoke user sessions: %w", err)
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("failed to check session revocation: %w", err)
+	}
+
+	log.Printf("Revoked %d sessions for user ID: %d", rowsAffected, userID)
+	return nil
+}
+
+func CleanupExpiredSessions() error {
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	result, err := oauthDB.ExecContext(ctx,
+		"DELETE FROM sessions WHERE expires_at < datetime('now')",
+	)
+	if err != nil {
+		return fmt.Errorf("failed to cleanup expired sessions: %w", err)
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("failed to check cleanup results: %w", err)
+	}
+
+	if rowsAffected > 0 {
+		log.Printf("Cleaned up %d expired sessions", rowsAffected)
+	}
+
+	return nil
+}
+
+func GetUserSessions(ctx context.Context, userID int) ([]SessionInfo, error) {
+	rows, err := oauthDB.QueryContext(ctx,
+		`SELECT user_id, expires_at, created_at FROM sessions WHERE user_id = ? ORDER BY created_at DESC`,
+		userID,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch user sessions: %w", err)
+	}
+	defer rows.Close()
+
+	var sessions []SessionInfo
+	for rows.Next() {
+		var session SessionInfo
+		if err := rows.Scan(&session.UserID, &session.ExpiresAt, &session.CreatedAt); err != nil {
+			return nil, fmt.Errorf("failed to scan session: %w", err)
+		}
+		session.IsValid = time.Now().Before(session.ExpiresAt)
+		sessions = append(sessions, session)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("error iterating sessions: %w", err)
+	}
+
+	return sessions, nil
+}
+
+func GetSessionHandler(w http.ResponseWriter, r *http.Request) error {
+	sessionToken := r.Header.Get("Authorization")
+	if sessionToken == "" {
+		return fmt.Errorf("missing authorization header")
+	}
+
+	sessionToken = trimBearer(sessionToken)
+
+	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
+	defer cancel()
+
+	sessionInfo, err := ValidateSession(ctx, sessionToken)
+	if err != nil {
+		return fmt.Errorf("invalid session: %w", err)
+	}
+
+	return WriteJSON(w, http.StatusOK, sessionInfo)
+}
+
+func RefreshSessionHandler(w http.ResponseWriter, r *http.Request) error {
+	sessionToken := r.Header.Get("Authorization")
+	if sessionToken == "" {
+		return fmt.Errorf("missing authorization header")
+	}
+
+	sessionToken = trimBearer(sessionToken)
+
+	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
+	defer cancel()
+
+	sessionInfo, err := RefreshSession(ctx, sessionToken)
+	if err != nil {
+		return fmt.Errorf("failed to refresh session: %w", err)
+	}
+
+	return WriteJSON(w, http.StatusOK, sessionInfo)
+}
+
+func RevokeSessionHandler(w http.ResponseWriter, r *http.Request) error {
+	sessionToken := r.Header.Get("Authorization")
+	if sessionToken == "" {
+		return fmt.Errorf("missing authorization header")
+	}
+
+	sessionToken = trimBearer(sessionToken)
+
+	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
+	defer cancel()
+
+	if err := RevokeSession(ctx, sessionToken); err != nil {
+		return fmt.Errorf("failed to revoke session: %w", err)
+	}
+
+	w.WriteHeader(http.StatusOK)
+	return nil
+}
+
+func RevokeAllSessionsHandler(w http.ResponseWriter, r *http.Request) error {
+	sessionToken := r.Header.Get("Authorization")
+	if sessionToken == "" {
+		return fmt.Errorf("missing authorization header")
+	}
+
+	sessionToken = trimBearer(sessionToken)
+
+	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
+	defer cancel()
+
+	sessionInfo, err := ValidateSession(ctx, sessionToken)
+	if err != nil {
+		return fmt.Errorf("invalid session: %w", err)
+	}
+
+	if err := RevokeAllUserSessions(ctx, sessionInfo.UserID); err != nil {
+		return fmt.Errorf("failed to revoke sessions: %w", err)
+	}
+
+	w.WriteHeader(http.StatusOK)
+	return nil
+}
+
+func ListUserSessionsHandler(w http.ResponseWriter, r *http.Request) error {
+	sessionToken := r.Header.Get("Authorization")
+	if sessionToken == "" {
+		return fmt.Errorf("missing authorization header")
+	}
+
+	sessionToken = trimBearer(sessionToken)
+
+	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
+	defer cancel()
+
+	sessionInfo, err := ValidateSession(ctx, sessionToken)
+	if err != nil {
+		return fmt.Errorf("invalid session: %w", err)
+	}
+
+	sessions, err := GetUserSessions(ctx, sessionInfo.UserID)
+	if err != nil {
+		return fmt.Errorf("failed to list sessions: %w", err)
+	}
+
+	return WriteJSON(w, http.StatusOK, sessions)
+}
+
+func trimBearer(token string) string {
+	if len(token) > 7 && token[:7] == "Bearer " {
+		return token[7:]
+	}
+	return token
+}
