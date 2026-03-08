@@ -19,8 +19,8 @@
 - [x] 1.2.6 Create user invitation system (PR #221)
 - [x] 1.2.7 Implement acceptance workflow for invitations (PR #221)
 - [x] 1.2.8 Build team-based access control (RBAC) (PR #222)
-- [ ] 1.2.9 Implement role assignments (admin, member, viewer)
-- [ ] 1.2.10 Create authentication middleware
+- [x] 1.2.9 Implement role assignments (admin, member, viewer) (PR #223)
+- [x] 1.2.10 Create authentication middleware (PR #223)
 
 ### 1.3 Workspace Provisioning
 - [ ] 1.3.1 Implement Podman provider interface
