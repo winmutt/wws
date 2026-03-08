@@ -16,9 +16,9 @@
 - [x] 1.2.3 Create user session management (PR #218)
 - [x] 1.2.4 Implement organization creation endpoint (PR #219)
 - [x] 1.2.5 Implement organization CRUD operations (PR #220)
-- [ ] 1.2.6 Create user invitation system
-- [ ] 1.2.7 Implement acceptance workflow for invitations
-- [ ] 1.2.8 Build team-based access control (RBAC)
+- [x] 1.2.6 Create user invitation system (PR #221)
+- [x] 1.2.7 Implement acceptance workflow for invitations (PR #221)
+- [x] 1.2.8 Build team-based access control (RBAC) (PR #222)
 - [ ] 1.2.9 Implement role assignments (admin, member, viewer)
 - [ ] 1.2.10 Create authentication middleware
 
