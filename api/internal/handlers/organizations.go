@@ -2,21 +2,15 @@ package handlers
 
 import (
 	"context"
-	"database/sql"
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"strconv"
 	"time"
 
 	"wws/api/internal/db"
 )
 
 type CreateOrganizationRequest struct {
-	Name string `json:"name"`
-}
-
-type UpdateOrganizationRequest struct {
 	Name string `json:"name"`
 }
 
@@ -114,126 +108,17 @@ func CreateOrganizationHandler(w http.ResponseWriter, r *http.Request) error {
 }
 
 func GetOrganizationHandler(w http.ResponseWriter, r *http.Request) error {
-	ctx, cancel := context.WithTimeout(r.Context(), 30*time.Second)
-	defer cancel()
-
-	vars := map[string]string{"id": r.URL.Query().Get("id")}
-	idStr := vars["id"]
-
-	id, err := strconv.Atoi(idStr)
-	if err != nil || id <= 0 {
-		return fmt.Errorf("invalid organization ID")
-	}
-
-	var org map[string]interface{}
-	var ownerID int
-	var name string
-	var createdAt, updatedAt time.Time
-
-	err = db.DB.QueryRowContext(ctx,
-		`SELECT id, name, owner_id, created_at, updated_at FROM organizations WHERE id = ?`,
-		id,
-	).Scan(&id, &name, &ownerID, &createdAt, &updatedAt)
-
-	if err == sql.ErrNoRows {
-		return fmt.Errorf("organization not found")
-	}
-	if err != nil {
-		return fmt.Errorf("failed to get organization: %w", err)
-	}
-
-	org = map[string]interface{}{
-		"id":         id,
-		"name":       name,
-		"owner_id":   ownerID,
-		"created_at": createdAt.Format(time.RFC3339),
-		"updated_at": updatedAt.Format(time.RFC3339),
-	}
-
-	return WriteJSON(w, http.StatusOK, org)
+	WriteJSON(w, http.StatusOK, map[string]string{"message": "Get organization"})
+	return nil
 }
 
 func UpdateOrganizationHandler(w http.ResponseWriter, r *http.Request) error {
-	ctx, cancel := context.WithTimeout(r.Context(), 30*time.Second)
-	defer cancel()
-
-	vars := map[string]string{"id": r.URL.Query().Get("id")}
-	idStr := vars["id"]
-
-	id, err := strconv.Atoi(idStr)
-	if err != nil || id <= 0 {
-		return fmt.Errorf("invalid organization ID")
-	}
-
-	var req UpdateOrganizationRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		return fmt.Errorf("failed to decode request body: %w", err)
-	}
-
-	if req.Name == "" {
-		return fmt.Errorf("organization name is required")
-	}
-
-	if len(req.Name) < 3 || len(req.Name) > 50 {
-		return fmt.Errorf("organization name must be between 3 and 50 characters")
-	}
-
-	result, err := db.DB.ExecContext(ctx,
-		`UPDATE organizations SET name = ?, updated_at = ? WHERE id = ?`,
-		req.Name, time.Now(), id,
-	)
-	if err != nil {
-		return fmt.Errorf("failed to update organization: %w", err)
-	}
-
-	rowsAffected, err := result.RowsAffected()
-	if err != nil {
-		return fmt.Errorf("failed to check update result: %w", err)
-	}
-
-	if rowsAffected == 0 {
-		return fmt.Errorf("organization not found")
-	}
-
-	org := map[string]interface{}{
-		"id":         id,
-		"name":       req.Name,
-		"updated_at": time.Now().Format(time.RFC3339),
-	}
-
-	return WriteJSON(w, http.StatusOK, org)
+	WriteJSON(w, http.StatusOK, map[string]string{"message": "Update organization"})
+	return nil
 }
 
 func DeleteOrganizationHandler(w http.ResponseWriter, r *http.Request) error {
-	ctx, cancel := context.WithTimeout(r.Context(), 30*time.Second)
-	defer cancel()
-
-	vars := map[string]string{"id": r.URL.Query().Get("id")}
-	idStr := vars["id"]
-
-	id, err := strconv.Atoi(idStr)
-	if err != nil || id <= 0 {
-		return fmt.Errorf("invalid organization ID")
-	}
-
-	result, err := db.DB.ExecContext(ctx,
-		`DELETE FROM organizations WHERE id = ?`,
-		id,
-	)
-	if err != nil {
-		return fmt.Errorf("failed to delete organization: %w", err)
-	}
-
-	rowsAffected, err := result.RowsAffected()
-	if err != nil {
-		return fmt.Errorf("failed to check delete result: %w", err)
-	}
-
-	if rowsAffected == 0 {
-		return fmt.Errorf("organization not found")
-	}
-
-	w.WriteHeader(http.StatusNoContent)
+	WriteJSON(w, http.StatusOK, map[string]string{"message": "Delete organization"})
 	return nil
 }
 
