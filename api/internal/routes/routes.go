@@ -35,6 +35,18 @@ func SetupRoutes(r *mux.Router) {
 	orgs.HandleFunc("", handlers.Adapter(handlers.ListOrganizationsHandler)).Methods("GET")
 	orgs.HandleFunc("", handlers.Adapter(handlers.CreateOrganizationHandler)).Methods("POST")
 
+	// Organization member routes
+	orgs.HandleFunc("/members", handlers.Adapter(handlers.ListMembersHandler)).Methods("GET")
+	orgs.HandleFunc("/members", handlers.Adapter(handlers.GetMemberHandler)).Methods("GET")
+	orgs.HandleFunc("/members", handlers.Adapter(handlers.RemoveMemberHandler)).Methods("DELETE")
+
+	// Organization role routes
+	orgs.HandleFunc("/roles", handlers.Adapter(handlers.AssignRoleHandler)).Methods("POST")
+
+	// Invitation routes
+	orgs.HandleFunc("/invitations", handlers.Adapter(handlers.CreateInvitationHandler)).Methods("POST")
+	orgs.HandleFunc("/invitations/accept", handlers.Adapter(handlers.AcceptInvitationHandler)).Methods("POST")
+
 	// Workspace routes
 	workspaces := api.PathPrefix("/workspaces").Subrouter()
 	workspaces.HandleFunc("", handlers.Adapter(handlers.ListWorkspacesHandler)).Methods("GET")
