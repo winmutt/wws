@@ -66,19 +66,13 @@ func TestMain(m *testing.M) {
 			state TEXT UNIQUE NOT NULL,
 			created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 		)`,
-		`CREATE TABLE IF NOT EXISTS invitations (
+		`CREATE TABLE IF NOT EXISTS organizations (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
-			organization_id INTEGER NOT NULL,
-			email TEXT NOT NULL,
-			token TEXT UNIQUE NOT NULL,
-			status TEXT NOT NULL DEFAULT 'pending',
-			created_by INTEGER NOT NULL,
-			accepted_by INTEGER,
+			name TEXT NOT NULL,
+			owner_id INTEGER NOT NULL,
 			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-			expires_at DATETIME NOT NULL,
-			FOREIGN KEY (organization_id) REFERENCES organizations(id),
-			FOREIGN KEY (created_by) REFERENCES users(id),
-			FOREIGN KEY (accepted_by) REFERENCES users(id)
+			updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+			FOREIGN KEY (owner_id) REFERENCES users(id)
 		)`,
 	}
 
