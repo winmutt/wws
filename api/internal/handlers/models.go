@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"net/http"
@@ -43,10 +44,11 @@ func requireAuth(r *http.Request) (int, error) {
 		return 0, fmt.Errorf("empty session token")
 	}
 
-	userID, err := validateSession(cookie.Value)
+	ctx := context.Background()
+	sessionInfo, err := ValidateSession(ctx, cookie.Value)
 	if err != nil {
 		return 0, fmt.Errorf("invalid session: %w", err)
 	}
 
-	return userID, nil
+	return sessionInfo.UserID, nil
 }
