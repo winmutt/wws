@@ -23,16 +23,16 @@
 - [x] 1.2.10 Create authentication middleware (PR #223)
 
 ### 1.3 Workspace Provisioning
-- [ ] 1.3.1 Implement Podman provider interface
-- [ ] 1.3.2 Create workspace container provisioning logic
-- [ ] 1.3.3 Implement KVM provider interface
-- [ ] 1.3.4 Create virtual machine provisioning logic
-- [ ] 1.3.5 Implement unique tag generation and validation
-- [ ] 1.3.6 Create workspace configuration storage
-- [ ] 1.3.7 Implement workspace CRUD API endpoints
-- [ ] 1.3.8 Build workspace status tracking
-- [ ] 1.3.9 Create resource allocation logic (CPU, memory, storage)
-- [ ] 1.3.10 Implement workspace lifecycle management
+- [x] 1.3.1 Implement Podman provider interface (PR #224)
+- [x] 1.3.2 Create workspace container provisioning logic (PR #224)
+- [ ] 1.3.3 Implement KVM provider interface (optional for MVP)
+- [ ] 1.3.4 Create virtual machine provisioning logic (optional for MVP)
+- [x] 1.3.5 Implement unique tag generation and validation (PR #225)
+- [x] 1.3.6 Create workspace configuration storage (PR #225)
+- [x] 1.3.7 Implement workspace CRUD API endpoints (PR #225)
+- [x] 1.3.8 Build workspace status tracking (PR #225)
+- [x] 1.3.9 Create resource allocation logic (CPU, memory, storage) (PR #225)
+- [x] 1.3.10 Implement workspace lifecycle management (PR #225)
 
 ### 1.4 Workspace Agent
 - [ ] 1.4.1 Create workspace agent bootstrap script
