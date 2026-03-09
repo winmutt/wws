@@ -88,23 +88,6 @@ func assignRole(ctx context.Context, userID, orgID, assignedBy int, role string)
 	return nil
 }
 
-func getUserByID(ctx context.Context, userID int) (*User, error) {
-	var user User
-	err := db.DB.QueryRowContext(ctx,
-		`SELECT id, github_id, username, email, created_at FROM users WHERE id = ?`,
-		userID,
-	).Scan(&user.ID, &user.GitHubID, &user.Username, &user.Email, &user.CreatedAt)
-
-	if err == sql.ErrNoRows {
-		return nil, fmt.Errorf("user not found")
-	}
-	if err != nil {
-		return nil, fmt.Errorf("failed to fetch user: %w", err)
-	}
-
-	return &user, nil
-}
-
 func listMembersByOrganization(ctx context.Context, orgID int) ([]MemberDetail, error) {
 	rows, err := db.DB.QueryContext(ctx,
 		`SELECT m.id, m.user_id, m.organization_id, m.role, m.invited_by, m.accepted, m.created_at,

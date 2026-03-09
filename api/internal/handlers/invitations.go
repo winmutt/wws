@@ -287,12 +287,14 @@ func AcceptInvitationHandler(w http.ResponseWriter, r *http.Request) error {
 
 func getMemberByUserAndOrg(ctx context.Context, userID, orgID int) (*Member, error) {
 	var member Member
+	var invitedBy sql.NullInt64
+
 	err := db.DB.QueryRowContext(ctx,
 		`SELECT id, user_id, organization_id, role, invited_by, accepted, created_at
 		 FROM members WHERE user_id = ? AND organization_id = ?`,
 		userID, orgID,
 	).Scan(&member.ID, &member.UserID, &member.OrganizationID, &member.Role,
-		&member.InvitedBy, &member.Accepted, &member.CreatedAt)
+		&invitedBy, &member.Accepted, &member.CreatedAt)
 
 	if err == sql.ErrNoRows {
 		return nil, nil
@@ -301,5 +303,13 @@ func getMemberByUserAndOrg(ctx context.Context, userID, orgID int) (*Member, err
 		return nil, fmt.Errorf("failed to fetch member: %w", err)
 	}
 
+	if invitedBy.Valid {
+		member.InvitedBy = invitedBy
+	}
+
 	return &member, nil
+}
+
+func GetMemberByUserAndOrg(ctx context.Context, userID, orgID int) (*Member, error) {
+	return getMemberByUserAndOrg(ctx, userID, orgID)
 }
