@@ -83,13 +83,13 @@
 - [x] 1.7.10 Implement responsive design (PR #229)
 
 ### 1.8 Testing Phase 1
-- [ ] 1.8.1 Write unit tests for authentication
-- [ ] 1.8.2 Write unit tests for organization management
-- [ ] 1.8.3 Write integration tests for workspace provisioning
-- [ ] 1.8.4 Write E2E tests for workspace lifecycle
-- [ ] 1.8.5 Test language installation
-- [ ] 1.8.6 Test SSH access
-- [ ] 1.8.7 Test code-server integration
+- [x] 1.8.1 Write unit tests for authentication (PR #223)
+- [x] 1.8.2 Write unit tests for organization management (PR #220)
+- [x] 1.8.3 Write integration tests for workspace provisioning (PR #230)
+- [x] 1.8.4 Write E2E tests for workspace lifecycle (PR #230)
+- [x] 1.8.5 Test language installation (PR #227)
+- [x] 1.8.6 Test SSH access (PR #226)
+- [x] 1.8.7 Test code-server integration (PR #226)
 
 ## Phase 2: Team Features - Priority: Medium
 
