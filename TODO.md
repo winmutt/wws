@@ -59,16 +59,16 @@
 - [x] 1.5.10 Build language installation UI component (PR #227)
 
 ### 1.6 Backend API
-- [ ] 1.6.1 Set up Go HTTP server
-- [ ] 1.6.2 Create REST API structure
-- [ ] 1.6.3 Implement workspace endpoints
-- [ ] 1.6.4 Implement user endpoints
-- [ ] 1.6.5 Implement organization endpoints
-- [ ] 1.6.6 Implement authentication endpoints
-- [ ] 1.6.7 Create middleware (auth, logging, recovery)
-- [ ] 1.6.8 Implement CORS configuration
-- [ ] 1.6.9 Create configuration management
-- [ ] 1.6.10 Set up database migrations
+- [x] 1.6.1 Set up Go HTTP server (PR #228)
+- [x] 1.6.2 Create REST API structure (PR #228)
+- [x] 1.6.3 Implement workspace endpoints (PR #228)
+- [x] 1.6.4 Implement user endpoints (PR #228)
+- [x] 1.6.5 Implement organization endpoints (PR #228)
+- [x] 1.6.6 Implement authentication endpoints (PR #228)
+- [x] 1.6.7 Create middleware (auth, logging, recovery) (PR #228)
+- [x] 1.6.8 Implement CORS configuration (PR #228)
+- [x] 1.6.9 Create configuration management (PR #228)
+- [x] 1.6.10 Set up database migrations (PR #228)
 
 ### 1.7 Frontend (React)
 - [ ] 1.7.1 Set up Create React App
