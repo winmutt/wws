@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"wws/provisioner/provider"
+	"wws/api/provisioner/provider"
 )
 
 func TestNewPodmanProvider(t *testing.T) {
