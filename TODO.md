@@ -71,16 +71,16 @@
 - [x] 1.6.10 Set up database migrations (PR #228)
 
 ### 1.7 Frontend (React)
-- [ ] 1.7.1 Set up Create React App
-- [ ] 1.7.2 Configure routing
-- [ ] 1.7.3 Create authentication pages (login, callback)
-- [ ] 1.7.4 Create organization management UI
-- [ ] 1.7.5 Create workspace list dashboard
-- [ ] 1.7.6 Create workspace creation form
-- [ ] 1.7.7 Create workspace status display
-- [ ] 1.7.8 Create workspace management controls
-- [ ] 1.7.9 Build editor connection links UI
-- [ ] 1.7.10 Implement responsive design
+- [x] 1.7.1 Set up Create React App (PR #229)
+- [x] 1.7.2 Configure routing (PR #229)
+- [x] 1.7.3 Create authentication pages (login, callback) (PR #229)
+- [x] 1.7.4 Create organization management UI (PR #229)
+- [x] 1.7.5 Create workspace list dashboard (PR #229)
+- [x] 1.7.6 Create workspace creation form (PR #229)
+- [x] 1.7.7 Create workspace status display (PR #229)
+- [x] 1.7.8 Create workspace management controls (PR #229)
+- [x] 1.7.9 Build editor connection links UI (PR #229)
+- [x] 1.7.10 Implement responsive design (PR #229)
 
 ### 1.8 Testing Phase 1
 - [ ] 1.8.1 Write unit tests for authentication
