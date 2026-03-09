@@ -47,16 +47,16 @@
 - [x] 1.4.10 Set up persistent home directory storage (PR #226)
 
 ### 1.5 Language Support
-- [ ] 1.5.1 Create Python module installer
-- [ ] 1.5.2 Create JavaScript/TypeScript module installer
-- [ ] 1.5.3 Create Go module installer
-- [ ] 1.5.4 Create Rust module installer
-- [ ] 1.5.5 Implement language checklist API
-- [ ] 1.5.6 Create language configuration storage
-- [ ] 1.5.7 Build language installation logic
-- [ ] 1.5.8 Implement language-specific PATH configuration
-- [ ] 1.5.9 Create language version management
-- [ ] 1.5.10 Build language installation UI component
+- [x] 1.5.1 Create Python module installer (PR #227)
+- [x] 1.5.2 Create JavaScript/TypeScript module installer (PR #227)
+- [x] 1.5.3 Create Go module installer (PR #227)
+- [x] 1.5.4 Create Rust module installer (PR #227)
+- [x] 1.5.5 Implement language checklist API (PR #227)
+- [x] 1.5.6 Create language configuration storage (PR #227)
+- [x] 1.5.7 Build language installation logic (PR #227)
+- [x] 1.5.8 Implement language-specific PATH configuration (PR #227)
+- [x] 1.5.9 Create language version management (PR #227)
+- [x] 1.5.10 Build language installation UI component (PR #227)
 
 ### 1.6 Backend API
 - [ ] 1.6.1 Set up Go HTTP server
