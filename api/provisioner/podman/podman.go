@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"wws/provisioner/provider"
+	"wws/api/provisioner/provider"
 )
 
 // PodmanProvider implements the provider.Provider interface for Podman containers
