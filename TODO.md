@@ -35,16 +35,16 @@
 - [x] 1.3.10 Implement workspace lifecycle management (PR #225)
 
 ### 1.4 Workspace Agent
-- [ ] 1.4.1 Create workspace agent bootstrap script
-- [ ] 1.4.2 Install and configure Zsh shell
-- [ ] 1.4.3 Install and configure yadm
-- [ ] 1.4.4 Set up dotfiles repository initialization
-- [ ] 1.4.5 Implement bootstrap script execution
-- [ ] 1.4.6 Configure GitHub credentials injection
-- [ ] 1.4.7 Set up gh CLI authentication
-- [ ] 1.4.8 Install and configure code-server
-- [ ] 1.4.9 Configure SSH daemon
-- [ ] 1.4.10 Set up persistent home directory storage
+- [x] 1.4.1 Create workspace agent bootstrap script (PR #226)
+- [x] 1.4.2 Install and configure Zsh shell (PR #226)
+- [x] 1.4.3 Install and configure yadm (PR #226)
+- [x] 1.4.4 Set up dotfiles repository initialization (PR #226)
+- [x] 1.4.5 Implement bootstrap script execution (PR #226)
+- [x] 1.4.6 Configure GitHub credentials injection (PR #226)
+- [x] 1.4.7 Set up gh CLI authentication (PR #226)
+- [x] 1.4.8 Install and configure code-server (PR #226)
+- [x] 1.4.9 Configure SSH daemon (PR #226)
+- [x] 1.4.10 Set up persistent home directory storage (PR #226)
 
 ### 1.5 Language Support
 - [ ] 1.5.1 Create Python module installer
