@@ -23,6 +23,7 @@ func main() {
 
 	routes.SetupRoutes(r)
 
+	r.Use(middleware.CORSMiddleware(config.Server.CORS.Origins))
 	r.Use(middleware.Logging)
 	r.Use(middleware.Recovery)
 
@@ -33,5 +34,6 @@ func main() {
 
 	log.Printf("Starting server on port %s", port)
 	log.Printf("GitHub OAuth configured for: %s", config.GitHub.CallbackURL)
+	log.Printf("CORS allowed origins: %v", config.Server.CORS.Origins)
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%s", port), r))
 }
