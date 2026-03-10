@@ -137,13 +137,12 @@ podman compose down
 **Option 2: Running Pre-built Docker Images**
 
 ```bash
-# Pull images from registry (if available)
-podman pull ghcr.io/winmutt/wws-api:latest
-podman pull ghcr.io/winmutt/wws-web:latest
-
-# Or build locally
+# Build images locally
 podman build -t wws-api -f api/Dockerfile .
 podman build -t wws-web -f web/Dockerfile .
+
+# Create data directory
+mkdir -p data
 
 # Run API container
 podman run -d \
@@ -155,11 +154,10 @@ podman run -d \
   -v $(pwd)/data:/data \
   wws-api
 
-# Run Web container
+# Run Web container (note: Podman doesn't need --link)
 podman run -d \
   --name wws-web \
   -p 3000:80 \
-  --link wws-api:api \
   wws-web
 
 # View logs
@@ -170,6 +168,10 @@ podman logs -f wws-web
 podman stop wws-api wws-web
 podman rm wws-api wws-web
 ```
+
+**Access the application:**
+- Frontend: http://localhost:3000
+- Backend API: http://localhost:8080
 
 **Option 3: Local Development**
 
