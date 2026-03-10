@@ -25,8 +25,8 @@
 ### 1.3 Workspace Provisioning
 - [x] 1.3.1 Implement Podman provider interface (PR #224)
 - [x] 1.3.2 Create workspace container provisioning logic (PR #224)
-- [ ] 1.3.3 Implement KVM provider interface (optional for MVP)
-- [ ] 1.3.4 Create virtual machine provisioning logic (optional for MVP)
+- [x] 1.3.3 Implement KVM provider interface (PR #231)
+- [x] 1.3.4 Create virtual machine provisioning logic (PR #231)
 - [x] 1.3.5 Implement unique tag generation and validation (PR #225)
 - [x] 1.3.6 Create workspace configuration storage (PR #225)
 - [x] 1.3.7 Implement workspace CRUD API endpoints (PR #225)
