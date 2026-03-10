@@ -134,6 +134,45 @@ podman compose logs -f
 podman compose down
 ```
 
+**Option 2: Running Pre-built Docker Images**
+
+```bash
+# Pull images from registry (if available)
+podman pull ghcr.io/winmutt/wws-api:latest
+podman pull ghcr.io/winmutt/wws-web:latest
+
+# Or build locally
+podman build -t wws-api -f api/Dockerfile .
+podman build -t wws-web -f web/Dockerfile .
+
+# Run API container
+podman run -d \
+  --name wws-api \
+  -p 8080:8080 \
+  -e GITHUB_CLIENT_ID=your_client_id \
+  -e GITHUB_CLIENT_SECRET=your_client_secret \
+  -e GITHUB_CALLBACK_URL=http://localhost:8080/oauth/callback \
+  -v $(pwd)/data:/data \
+  wws-api
+
+# Run Web container
+podman run -d \
+  --name wws-web \
+  -p 3000:80 \
+  --link wws-api:api \
+  wws-web
+
+# View logs
+podman logs -f wws-api
+podman logs -f wws-web
+
+# Stop containers
+podman stop wws-api wws-web
+podman rm wws-api wws-web
+```
+
+**Option 3: Local Development**
+
 **Option 2: Local Development**
 
 ```bash
