@@ -91,6 +91,14 @@
 - [x] 1.8.6 Test SSH access (PR #226)
 - [x] 1.8.7 Test code-server integration (PR #226)
 
+### 1.9 Docker/Podman Compose Deployment
+- [x] 1.9.1 Update docker-compose.yml with environment variables and networks (PR #232)
+- [x] 1.9.2 Fix API Dockerfile for root context build (PR #232)
+- [x] 1.9.3 Fix web Dockerfile for root context build (PR #232)
+- [x] 1.9.4 Create .env.example configuration file (PR #232)
+- [x] 1.9.5 Update README.md with deployment instructions (PR #232)
+- [x] 1.9.6 Update api/go.mod for standalone module (PR #232)
+
 ## Phase 2: Team Features - Priority: Medium
 
 ### 2.1 Collaboration

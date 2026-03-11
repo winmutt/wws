@@ -2,16 +2,17 @@ FROM node:20-alpine AS builder
 
 WORKDIR /build
 
-COPY package.json package-lock.json ./
-RUN npm ci --only=production
+COPY web/package.json ./
+RUN npm install --legacy-peer-deps
 
-COPY . .
+COPY web/ ./
 RUN npm run build
 
 FROM nginx:alpine
 
-COPY --from=builder /build/dist /usr/share/nginx/html
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+COPY --from=builder /build/build /usr/share/nginx/html
+
+RUN echo "server { listen 80; location / { root /usr/share/nginx/html; index index.html; try_files \$uri \$uri/ /index.html; } }" > /etc/nginx/conf.d/default.conf
 
 EXPOSE 80
 

@@ -1,11 +1,15 @@
-FROM golang:1.21-alpine AS builder
+FROM golang:1.24-alpine AS builder
 
 WORKDIR /build
 
-COPY go.mod go.sum ./
+# Copy go.mod and go.sum first for better caching
+COPY api/go.mod api/go.sum ./
 RUN go mod download
 
-COPY . .
+# Copy rest of source code
+COPY api/ ./
+
+# Build the application
 RUN CGO_ENABLED=0 GOOS=linux go build -v -a -installsuffix cgo -o main ./cmd
 
 FROM alpine:latest
@@ -15,7 +19,6 @@ RUN apk --no-cache add ca-certificates
 WORKDIR /app
 
 COPY --from=builder /build/main .
-COPY --from=builder /build/config.yaml.example ./
 
 EXPOSE 8080
 

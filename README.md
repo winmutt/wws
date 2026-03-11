@@ -109,6 +109,74 @@ wws/
 
 ### Development Setup
 
+**Option 1: Docker/Podman Compose (Recommended)**
+
+```bash
+# Clone repository
+git clone https://github.com/yourorg/wws.git
+cd wws
+
+# Configure environment
+cp .env.example .env
+# Edit .env with your GitHub OAuth credentials
+
+# Build and start services
+podman compose up -d
+
+# View logs
+podman compose logs -f
+
+# Access application
+# Frontend: http://localhost:3000
+# Backend API: http://localhost:8080
+
+# Stop services
+podman compose down
+```
+
+**Option 2: Running Pre-built Docker Images**
+
+```bash
+# Build images locally
+podman build -t wws-api -f api/Dockerfile .
+podman build -t wws-web -f web/Dockerfile .
+
+# Create data directory
+mkdir -p data
+
+# Run API container
+podman run -d \
+  --name wws-api \
+  -p 8080:8080 \
+  -e GITHUB_CLIENT_ID=your_client_id \
+  -e GITHUB_CLIENT_SECRET=your_client_secret \
+  -e GITHUB_CALLBACK_URL=http://localhost:8080/oauth/callback \
+  -v $(pwd)/data:/data \
+  wws-api
+
+# Run Web container (note: Podman doesn't need --link)
+podman run -d \
+  --name wws-web \
+  -p 3000:80 \
+  wws-web
+
+# View logs
+podman logs -f wws-api
+podman logs -f wws-web
+
+# Stop containers
+podman stop wws-api wws-web
+podman rm wws-api wws-web
+```
+
+**Access the application:**
+- Frontend: http://localhost:3000
+- Backend API: http://localhost:8080
+
+**Option 3: Local Development**
+
+**Option 2: Local Development**
+
 ```bash
 # Clone repository
 git clone https://github.com/yourorg/wws.git
@@ -117,7 +185,7 @@ cd wws
 # Backend
 cd api
 go mod download
-go run main.go
+go run cmd/main.go
 
 # Frontend (in new terminal)
 cd web
@@ -127,8 +195,24 @@ npm start
 
 ### Configuration
 
-Create `config.yaml`:
+**Option 1: Environment Variables (Recommended for Docker/Podman)**
 
+Copy `.env.example` to `.env`:
+```bash
+cp .env.example .env
+```
+
+Edit `.env` and set your GitHub OAuth credentials:
+```bash
+GITHUB_CLIENT_ID=your_github_client_id
+GITHUB_CLIENT_SECRET=your_github_client_secret
+GITHUB_CALLBACK_URL=http://localhost:8080/oauth/callback
+CORS_ORIGINS=http://localhost:3000,http://127.0.0.1:3000
+```
+
+**Option 2: Config File (For local development)**
+
+Create `api/config.yaml`:
 ```yaml
 server:
   port: 8080
@@ -136,7 +220,7 @@ server:
     origins: ["http://localhost:3000"]
 
 database:
-  path: "./wws.db"
+  path: "./data/wws.db"
 
 github:
   client_id: "your_github_oauth_client_id"
