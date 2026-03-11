@@ -27,8 +27,8 @@ interface Organization {
 function WorkspaceList() {
   const { isAuthenticated, logout } = useAuth();
   const navigate = useNavigate();
-  const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
-  const [organizations, setOrganizations] = useState<Organization[]>([]);
+  const [workspaceList, setWorkspaceList] = useState<Workspace[]>([]);
+  const [orgs, setOrgs] = useState<Organization[]>([]);
   const [selectedOrg, setSelectedOrg] = useState<number | null>(null);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -48,8 +48,8 @@ function WorkspaceList() {
         organizations.list(),
         selectedOrg ? workspaces.list(selectedOrg) : Promise.resolve([]),
       ]);
-      setOrganizations(orgs);
-      setWorkspaces(ws);
+      setOrgs(orgs);
+      setWorkspaceList(ws);
       if (!selectedOrg && orgs.length > 0) {
         setSelectedOrg(orgs[0].id);
       }
@@ -91,13 +91,13 @@ function WorkspaceList() {
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold">Workspaces</h2>
         <div className="flex space-x-4">
-          {organizations.length > 0 && (
+          {orgs.length > 0 && (
             <select
               value={selectedOrg || ''}
               onChange={(e) => setSelectedOrg(Number(e.target.value))}
               className="px-3 py-2 border border-gray-300 rounded-md"
             >
-              {organizations.map((org) => (
+              {orgs.map((org) => (
                 <option key={org.id} value={org.id}>
                   {org.name}
                 </option>
@@ -130,7 +130,7 @@ function WorkspaceList() {
         <div className="text-center py-12">
           <p className="text-gray-600">Loading workspaces...</p>
         </div>
-      ) : workspaces.length === 0 ? (
+      ) : workspaceList.length === 0 ? (
         <div className="text-center py-12">
           <p className="text-gray-600 mb-4">No workspaces yet</p>
           <button
@@ -142,7 +142,7 @@ function WorkspaceList() {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {workspaces.map((workspace) => (
+          {workspaceList.map((workspace) => (
             <WorkspaceCard
               key={workspace.id}
               workspace={workspace}

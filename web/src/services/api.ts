@@ -254,7 +254,7 @@ const workspaces = {
     return response.json();
   },
 
-  async create(data: { name: string; organization_id: number; provider?: string; config?: any }): Promise<Workspace> {
+  async create(data: { name: string; organization_id: number; provider?: string; region?: string; config?: any }): Promise<Workspace> {
     const response = await fetch(`${API_BASE}/workspaces`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
