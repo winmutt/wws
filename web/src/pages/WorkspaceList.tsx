@@ -32,6 +32,7 @@ function WorkspaceList() {
   const [selectedOrg, setSelectedOrg] = useState<number | null>(null);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -43,6 +44,7 @@ function WorkspaceList() {
 
   const loadData = async () => {
     setIsLoading(true);
+    setError('');
     try {
       const [orgs, ws] = await Promise.all([
         organizations.list(),
@@ -53,8 +55,9 @@ function WorkspaceList() {
       if (!selectedOrg && orgs.length > 0) {
         setSelectedOrg(orgs[0].id);
       }
-    } catch (error) {
-      console.error('Failed to load data:', error);
+    } catch (err) {
+      console.error('Failed to load data:', err);
+      setError('Failed to load data. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -90,6 +93,12 @@ function WorkspaceList() {
     <div className="p-4">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold">Workspaces</h2>
+        {error && (
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-2 rounded">
+            {error}
+          </div>
+        )}
+      </div>
         <div className="flex space-x-4">
           {orgs.length > 0 && (
             <select
@@ -118,9 +127,7 @@ function WorkspaceList() {
             Logout
           </button>
         </div>
-      </div>
-
-      {!selectedOrg ? (
+       {!selectedOrg ? (
         <div className="text-center py-12">
           <p className="text-gray-600">
             No organizations found. Create an organization to get started.
