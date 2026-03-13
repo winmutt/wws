@@ -8,3 +8,5 @@ require (
 	github.com/mattn/go-sqlite3 v1.14.34
 	golang.org/x/oauth2 v0.35.0
 )
+
+require google.golang.org/protobuf v1.36.11 // indirect

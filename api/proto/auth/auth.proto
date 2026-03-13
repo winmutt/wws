@@ -3,7 +3,6 @@ syntax = "proto3";
 package wws.auth;
 
 option go_package = "wws/api/proto/auth";
-option js_package = "wws.auth";
 
 import "common/common.proto";
 import "user/user.proto";

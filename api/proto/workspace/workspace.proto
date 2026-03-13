@@ -3,7 +3,6 @@ syntax = "proto3";
 package wws.workspace;
 
 option go_package = "wws/api/proto/workspace";
-option js_package = "wws.workspace";
 
 import "common/common.proto";
 

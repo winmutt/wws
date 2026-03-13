@@ -3,7 +3,6 @@ syntax = "proto3";
 package wws.common;
 
 option go_package = "wws/api/proto/common";
-option js_package = "wws.common";
 
 // Common types used across all services
 
