@@ -1,0 +1,59 @@
+syntax = "proto3";
+
+package wws.auth;
+
+option go_package = "wws/api/proto/auth";
+option js_package = "wws.auth";
+
+import "common/common.proto";
+import "user/user.proto";
+
+// AuthService definition
+service AuthService {
+  // Initiate GitHub OAuth flow
+  rpc GitHubAuth(GitHubAuthRequest) returns (GitHubAuthResponse);
+  
+  // Handle GitHub OAuth callback
+  rpc GitHubCallback(GitHubCallbackRequest) returns (GitHubCallbackResponse);
+  
+  // Get current session
+  rpc GetSession(GetSessionRequest) returns (SessionResponse);
+  
+  // Logout
+  rpc Logout(LogoutRequest) returns (common.Empty);
+}
+
+// GitHubAuthRequest
+message GitHubAuthRequest {}
+
+// GitHubAuthResponse
+message GitHubAuthResponse {
+  string auth_url = 1;
+  string state = 2;
+}
+
+// GitHubCallbackRequest
+message GitHubCallbackRequest {
+  string code = 1;
+  string state = 2;
+}
+
+// GitHubCallbackResponse
+message GitHubCallbackResponse {
+  user.User user = 1;
+  string access_token = 2;
+  bool new_user = 3;
+}
+
+// GetSessionRequest
+message GetSessionRequest {}
+
+// SessionResponse
+message SessionResponse {
+  bool authenticated = 1;
+  user.User user = 2;
+  common.Timestamp expires_at = 3;
+}
+
+// LogoutRequest
+message LogoutRequest {}

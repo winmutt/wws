@@ -1,0 +1,176 @@
+syntax = "proto3";
+
+package wws.workspace;
+
+option go_package = "wws/api/proto/workspace";
+option js_package = "wws.workspace";
+
+import "common/common.proto";
+
+// Workspace service definition
+service WorkspaceService {
+  // List all workspaces for an organization
+  rpc ListWorkspaces(ListWorkspacesRequest) returns (ListWorkspacesResponse);
+  
+  // Get workspace by ID
+  rpc GetWorkspace(GetWorkspaceRequest) returns (WorkspaceResponse);
+  
+  // Create workspace
+  rpc CreateWorkspace(CreateWorkspaceRequest) returns (WorkspaceResponse);
+  
+  // Update workspace
+  rpc UpdateWorkspace(UpdateWorkspaceRequest) returns (WorkspaceResponse);
+  
+  // Delete workspace
+  rpc DeleteWorkspace(DeleteWorkspaceRequest) returns (common.Empty);
+  
+  // Start workspace
+  rpc StartWorkspace(StartWorkspaceRequest) returns (WorkspaceResponse);
+  
+  // Stop workspace
+  rpc StopWorkspace(StopWorkspaceRequest) returns (WorkspaceResponse);
+  
+  // Restart workspace
+  rpc RestartWorkspace(RestartWorkspaceRequest) returns (WorkspaceResponse);
+  
+  // Get workspace logs
+  rpc GetWorkspaceLogs(GetWorkspaceLogsRequest) returns (WorkspaceLogsResponse);
+  
+  // Install language in workspace
+  rpc InstallLanguage(InstallLanguageRequest) returns (InstallLanguageResponse);
+  
+  // List installed languages
+  rpc ListLanguages(ListLanguagesRequest) returns (ListLanguagesResponse);
+}
+
+// Workspace message
+message Workspace {
+  int32 id = 1;
+  string tag = 2;
+  string name = 3;
+  int32 organization_id = 4;
+  int32 owner_id = 5;
+  string provider = 6;
+  common.Status status = 7;
+  string endpoint = 8;
+  string ssh_host = 9;
+  int32 ssh_port = 10;
+  string http_host = 11;
+  int32 http_port = 12;
+  string code_host = 13;
+  int32 code_port = 14;
+  int32 cpu = 15;
+  int32 memory = 16;
+  int32 storage = 17;
+  string region = 18;
+  string config = 19;
+  common.Timestamp created_at = 20;
+  common.Timestamp updated_at = 21;
+}
+
+// Language message
+message Language {
+  int32 id = 1;
+  int32 workspace_id = 2;
+  string name = 3;
+  string version = 4;
+  string install_script = 5;
+  common.Timestamp installed_at = 6;
+}
+
+// ListWorkspacesRequest
+message ListWorkspacesRequest {
+  int32 organization_id = 1;
+  common.PaginationRequest pagination = 2;
+}
+
+// ListWorkspacesResponse
+message ListWorkspacesResponse {
+  repeated Workspace workspaces = 1;
+  common.PaginationResponse pagination = 2;
+}
+
+// GetWorkspaceRequest
+message GetWorkspaceRequest {
+  int32 id = 1;
+}
+
+// WorkspaceResponse
+message WorkspaceResponse {
+  Workspace workspace = 1;
+}
+
+// CreateWorkspaceRequest
+message CreateWorkspaceRequest {
+  string name = 1;
+  int32 organization_id = 2;
+  int32 cpu = 3;
+  int32 memory = 4;
+  int32 storage = 5;
+  repeated string languages = 6;
+  string region = 7;
+}
+
+// UpdateWorkspaceRequest
+message UpdateWorkspaceRequest {
+  int32 id = 1;
+  string name = 2;
+  int32 cpu = 3;
+  int32 memory = 4;
+  int32 storage = 5;
+  repeated string languages = 6;
+  string region = 7;
+}
+
+// DeleteWorkspaceRequest
+message DeleteWorkspaceRequest {
+  int32 id = 1;
+}
+
+// StartWorkspaceRequest
+message StartWorkspaceRequest {
+  int32 id = 1;
+}
+
+// StopWorkspaceRequest
+message StopWorkspaceRequest {
+  int32 id = 1;
+}
+
+// RestartWorkspaceRequest
+message RestartWorkspaceRequest {
+  int32 id = 1;
+}
+
+// GetWorkspaceLogsRequest
+message GetWorkspaceLogsRequest {
+  int32 id = 1;
+  int32 tail_lines = 2;
+}
+
+// WorkspaceLogsResponse
+message WorkspaceLogsResponse {
+  string logs = 1;
+}
+
+// InstallLanguageRequest
+message InstallLanguageRequest {
+  int32 workspace_id = 1;
+  string language = 2;
+  string version = 3;
+}
+
+// InstallLanguageResponse
+message InstallLanguageResponse {
+  Language language = 1;
+}
+
+// ListLanguagesRequest
+message ListLanguagesRequest {
+  int32 workspace_id = 1;
+}
+
+// ListLanguagesResponse
+message ListLanguagesResponse {
+  repeated Language languages = 1;
+}

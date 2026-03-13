@@ -1,0 +1,55 @@
+syntax = "proto3";
+
+package wws.user;
+
+option go_package = "wws/api/proto/user";
+option js_package = "wws.user";
+
+import "common/common.proto";
+
+// User service definition
+service UserService {
+  // Get current user profile
+  rpc GetCurrentUser(GetCurrentUserRequest) returns (UserResponse);
+  
+  // Get user by ID
+  rpc GetUser(GetUserRequest) returns (UserResponse);
+  
+  // List users in an organization
+  rpc ListUsers(ListUsersRequest) returns (ListUsersResponse);
+}
+
+// User message
+message User {
+  int32 id = 1;
+  string github_id = 2;
+  string username = 3;
+  string email = 4;
+  string avatar_url = 5;
+  common.Timestamp created_at = 6;
+}
+
+// GetCurrentUserRequest
+message GetCurrentUserRequest {}
+
+// GetUserRequest
+message GetUserRequest {
+  int32 id = 1;
+}
+
+// UserResponse
+message UserResponse {
+  User user = 1;
+}
+
+// ListUsersRequest
+message ListUsersRequest {
+  int32 organization_id = 1;
+  common.PaginationRequest pagination = 2;
+}
+
+// ListUsersResponse
+message ListUsersResponse {
+  repeated User users = 1;
+  common.PaginationResponse pagination = 2;
+}
