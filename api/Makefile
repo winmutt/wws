@@ -22,7 +22,6 @@ proto-go: $(PROTOC_GEN_GO)
 	$(PROTOC) \
 		--go_out=$(GO_OUT_DIR) \
 		--go_opt=module=$(GO_MODULE) \
-		--go_opt=paths=source_relative \
 		-I$(PROTO_DIR) \
 		$(PROTO_DIR)/common/common.proto \
 		$(PROTO_DIR)/user/user.proto \
