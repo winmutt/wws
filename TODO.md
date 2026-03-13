@@ -124,16 +124,16 @@
 - [ ] 2.2.8 Implement workspace scaling
 
 ### 2.3 Protocol Buffers Migration - Priority: High
-- [ ] 2.3.1 Define protobuf schemas for all API messages
-- [ ] 2.3.2 Set up protobuf compilation in CI/CD pipeline
-- [ ] 2.3.3 Generate Go code from protobuf schemas
-- [ ] 2.3.4 Generate TypeScript/JavaScript code from protobuf schemas
-- [ ] 2.3.5 Implement gRPC-Web gateway for browser clients
-- [ ] 2.3.6 Update backend handlers to use protobuf messages
-- [ ] 2.3.7 Update frontend API client to use protobuf messages
+- [x] 2.3.1 Define protobuf schemas for all API messages (PR #248)
+- [x] 2.3.2 Set up protobuf compilation in CI/CD pipeline (PR #248)
+- [x] 2.3.3 Generate Go code from protobuf schemas (PR #248)
+- [x] 2.3.4 Generate TypeScript/JavaScript code from protobuf schemas (PR #248)
+- [x] 2.3.5 Implement gRPC-Web gateway for browser clients (PR #248)
+- [x] 2.3.6 Update backend handlers to use protobuf messages (PR #248)
+- [x] 2.3.7 Update frontend API client to use protobuf messages (PR #248)
 - [ ] 2.3.8 Migrate authentication endpoints to protobuf
-- [ ] 2.3.9 Migrate organization endpoints to protobuf
-- [ ] 2.3.10 Migrate workspace endpoints to protobuf
+- [x] 2.3.9 Migrate organization endpoints to protobuf (PR #248)
+- [x] 2.3.10 Migrate workspace endpoints to protobuf (PR #248)
 - [ ] 2.3.11 Add protobuf validation tests
 - [ ] 2.3.12 Update API documentation for protobuf endpoints
 - [ ] 2.2.9 Build workspace history
