@@ -12,6 +12,7 @@ import (
 
 	"github.com/gorilla/mux"
 
+	"wws/api/internal/db"
 	"wws/api/internal/grpc"
 	"wws/api/internal/middleware"
 	"wws/api/internal/routes"
@@ -23,6 +24,10 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to load config: %v", err)
 	}
+
+	// Initialize database
+	db.Init(config.Database.Path)
+	defer db.Close()
 
 	r := mux.NewRouter()
 
@@ -56,10 +61,16 @@ func main() {
 		}
 	}()
 
-	log.Printf("HTTP server starting on port %s", httpPort)
-	log.Printf("gRPC server starting on port %s", grpcPort)
 	log.Printf("GitHub OAuth configured for: %s", config.GitHub.CallbackURL)
 	log.Printf("CORS allowed origins: %v", config.Server.CORS.Origins)
+
+	// Start HTTP server
+	go func() {
+		log.Printf("HTTP server starting on port %s", httpPort)
+		if err := httpServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Printf("HTTP server error: %v", err)
+		}
+	}()
 
 	// Handle graceful shutdown
 	sigChan := make(chan os.Signal, 1)
