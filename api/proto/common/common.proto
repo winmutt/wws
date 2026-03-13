@@ -1,0 +1,46 @@
+syntax = "proto3";
+
+package wws.common;
+
+option go_package = "wws/api/proto/common";
+
+// Common types used across all services
+
+// Timestamp represents a time in RFC3339 format
+message Timestamp {
+  string value = 1;
+}
+
+// Status represents the status of a resource
+enum Status {
+  STATUS_UNSPECIFIED = 0;
+  STATUS_ACTIVE = 1;
+  STATUS_INACTIVE = 2;
+  STATUS_RUNNING = 3;
+  STATUS_STOPPED = 4;
+  STATUS_CREATING = 5;
+  STATUS_DELETING = 6;
+  STATUS_ERROR = 7;
+}
+
+// Pagination request
+message PaginationRequest {
+  int32 page_size = 1;
+  string page_token = 2;
+}
+
+// Pagination response
+message PaginationResponse {
+  int32 total_count = 1;
+  string next_page_token = 2;
+}
+
+// Error response
+message Error {
+  int32 code = 1;
+  string message = 2;
+  string field = 3;
+}
+
+// Empty response for operations that don't return data
+message Empty {}
