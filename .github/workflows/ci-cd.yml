@@ -61,6 +61,7 @@ jobs:
         path: api/proto
 
   test:
+    needs: [protobuf]
     runs-on: ubuntu-latest
     
     steps:
