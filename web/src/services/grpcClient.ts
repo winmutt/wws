@@ -23,22 +23,28 @@ import {
   StopWorkspaceRequest,
   RestartWorkspaceRequest,
 } from '../proto/workspace/workspace';
+import { GrpcWebFetchTransport } from '@protobuf-ts/grpcweb-transport';
 
 // gRPC-Web endpoint (configure based on environment)
 const GRPC_WEB_ENDPOINT = process.env.REACT_APP_GRPC_WEB_URL || 'http://localhost:9090';
 
-// Initialize gRPC-Web clients
-const organizationClient = new OrganizationServiceClient(GRPC_WEB_ENDPOINT);
-const workspaceClient = new WorkspaceServiceClient(GRPC_WEB_ENDPOINT);
-const userClient = new UserServiceClient(GRPC_WEB_ENDPOINT);
-const authClient = new AuthServiceClient(GRPC_WEB_ENDPOINT);
+// Create gRPC-Web transport
+const transport = new GrpcWebFetchTransport({
+  baseUrl: GRPC_WEB_ENDPOINT,
+});
+
+// Initialize gRPC-Web clients with transport
+const organizationClient = new OrganizationServiceClient(transport);
+const workspaceClient = new WorkspaceServiceClient(transport);
+const userClient = new UserServiceClient(transport);
+const authClient = new AuthServiceClient(transport);
 
 // Organization gRPC client
 const grpcOrganizations = {
   async list() {
-    const request = ListOrganizationsRequest.fromPartial({});
+    const request = ListOrganizationsRequest.create({});
     const response = await organizationClient.listOrganizations(request);
-    return response.organizations.map(org => ({
+    return response.response.organizations.map(org => ({
       id: Number(org.id),
       name: org.name,
       owner_id: Number(org.ownerId),
@@ -48,9 +54,9 @@ const grpcOrganizations = {
   },
 
   async get(id: number) {
-    const request = GetOrganizationRequest.fromPartial({ id });
+    const request = GetOrganizationRequest.create({ id });
     const response = await organizationClient.getOrganization(request);
-    const org = response.organization;
+    const org = response.response.organization;
     return {
       id: Number(org?.id),
       name: org?.name || '',
@@ -61,9 +67,9 @@ const grpcOrganizations = {
   },
 
   async create(name: string) {
-    const request = CreateOrganizationRequest.fromPartial({ name });
+    const request = CreateOrganizationRequest.create({ name });
     const response = await organizationClient.createOrganization(request);
-    const org = response.organization;
+    const org = response.response.organization;
     return {
       id: Number(org?.id),
       name: org?.name || '',
@@ -74,9 +80,9 @@ const grpcOrganizations = {
   },
 
   async update(id: number, name: string, description: string) {
-    const request = UpdateOrganizationRequest.fromPartial({ id, name, description });
+    const request = UpdateOrganizationRequest.create({ id, name, description });
     const response = await organizationClient.updateOrganization(request);
-    const org = response.organization;
+    const org = response.response.organization;
     return {
       id: Number(org?.id),
       name: org?.name || '',
@@ -86,7 +92,7 @@ const grpcOrganizations = {
   },
 
   async delete(id: number) {
-    const request = DeleteOrganizationRequest.fromPartial({ id });
+    const request = DeleteOrganizationRequest.create({ id });
     await organizationClient.deleteOrganization(request);
   },
 };
@@ -94,9 +100,9 @@ const grpcOrganizations = {
 // Workspace gRPC client
 const grpcWorkspaces = {
   async list(orgId: number) {
-    const request = ListWorkspacesRequest.fromPartial({ organizationId: orgId });
+    const request = ListWorkspacesRequest.create({ organizationId: orgId });
     const response = await workspaceClient.listWorkspaces(request);
-    return response.workspaces.map(ws => ({
+    return response.response.workspaces.map(ws => ({
       id: Number(ws.id),
       tag: ws.tag,
       name: ws.name,
@@ -110,9 +116,9 @@ const grpcWorkspaces = {
   },
 
   async get(id: number) {
-    const request = GetWorkspaceRequest.fromPartial({ id });
+    const request = GetWorkspaceRequest.create({ id });
     const response = await workspaceClient.getWorkspace(request);
-    const ws = response.workspace;
+    const ws = response.response.workspace;
     return {
       id: Number(ws?.id),
       tag: ws?.tag || '',
@@ -127,7 +133,7 @@ const grpcWorkspaces = {
   },
 
   async create(data: { name: string; organization_id: number; cpu?: number; memory?: number; storage?: number; languages?: string[]; region?: string }) {
-    const request = CreateWorkspaceRequest.fromPartial({
+    const request = CreateWorkspaceRequest.create({
       name: data.name,
       organizationId: data.organization_id,
       cpu: data.cpu,
@@ -137,7 +143,7 @@ const grpcWorkspaces = {
       region: data.region,
     });
     const response = await workspaceClient.createWorkspace(request);
-    const ws = response.workspace;
+    const ws = response.response.workspace;
     return {
       id: Number(ws?.id),
       tag: ws?.tag || '',
@@ -152,9 +158,9 @@ const grpcWorkspaces = {
   },
 
   async update(id: number, data: Partial<{ name: string; cpu: number; memory: number; storage: number; languages: string[]; region: string }>) {
-    const request = UpdateWorkspaceRequest.fromPartial({ id, ...data });
+    const request = UpdateWorkspaceRequest.create({ id, ...data });
     const response = await workspaceClient.updateWorkspace(request);
-    const ws = response.workspace;
+    const ws = response.response.workspace;
     return {
       id: Number(ws?.id),
       tag: ws?.tag || '',
@@ -169,14 +175,14 @@ const grpcWorkspaces = {
   },
 
   async delete(id: number) {
-    const request = DeleteWorkspaceRequest.fromPartial({ id });
+    const request = DeleteWorkspaceRequest.create({ id });
     await workspaceClient.deleteWorkspace(request);
   },
 
   async start(id: number) {
-    const request = StartWorkspaceRequest.fromPartial({ id });
+    const request = StartWorkspaceRequest.create({ id });
     const response = await workspaceClient.startWorkspace(request);
-    const ws = response.workspace;
+    const ws = response.response.workspace;
     return {
       id: Number(ws?.id),
       status: ws?.status,
@@ -185,9 +191,9 @@ const grpcWorkspaces = {
   },
 
   async stop(id: number) {
-    const request = StopWorkspaceRequest.fromPartial({ id });
+    const request = StopWorkspaceRequest.create({ id });
     const response = await workspaceClient.stopWorkspace(request);
-    const ws = response.workspace;
+    const ws = response.response.workspace;
     return {
       id: Number(ws?.id),
       status: ws?.status,
@@ -196,9 +202,9 @@ const grpcWorkspaces = {
   },
 
   async restart(id: number) {
-    const request = RestartWorkspaceRequest.fromPartial({ id });
+    const request = RestartWorkspaceRequest.create({ id });
     const response = await workspaceClient.restartWorkspace(request);
-    const ws = response.workspace;
+    const ws = response.response.workspace;
     return {
       id: Number(ws?.id),
       status: ws?.status,

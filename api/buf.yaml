@@ -1,0 +1,22 @@
+version: v1
+name: buf.build/winmutt/wws
+deps:
+  - buf.build/grpc/proto
+breaking:
+  use:
+    - FILE
+lint:
+  use:
+    - DEFAULT
+    - COMMENTS
+    - FILE_LOWER_SNAKE_CASE
+  except:
+    - COMMENT_ENUM
+    - COMMENT_ENUM_VALUE
+    - COMMENT_MESSAGE
+    - COMMENT_RPC
+    - COMMENT_SERVICE
+    - COMMENT_FIELD
+build:
+  roots:
+    - proto

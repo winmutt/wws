@@ -3,6 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@protobuf-ts/grpcweb-transport": "^2.11.1",
+    "@protobuf-ts/runtime": "^2.11.1",
+    "@protobuf-ts/runtime-rpc": "^2.11.1",
     "@types/react": "^18.2.0",
     "@types/react-dom": "^18.2.0",
     "axios": "^1.6.0",
