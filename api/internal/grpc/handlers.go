@@ -254,37 +254,315 @@ func (s *Server) ListWorkspaces(ctx context.Context, req *workspace.ListWorkspac
 
 // GetWorkspace implements the gRPC handler for getting workspace
 func (s *Server) GetWorkspace(ctx context.Context, req *workspace.GetWorkspaceRequest) (*workspace.WorkspaceResponse, error) {
-	return &workspace.WorkspaceResponse{}, nil
+	var ws models.Workspace
+	err := db.DB.QueryRowContext(ctx,
+		`SELECT id, tag, name, organization_id, owner_id, provider, status, config, region, created_at, updated_at 
+		 FROM workspaces WHERE id = ? AND deleted_at IS NULL`,
+		req.Id,
+	).Scan(&ws.ID, &ws.Tag, &ws.Name, &ws.OrganizationID, &ws.OwnerID, &ws.Provider, &ws.Status, &ws.Config, &ws.Region, &ws.CreatedAt, &ws.UpdatedAt)
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to get workspace: %w", err)
+	}
+
+	return &workspace.WorkspaceResponse{
+		Workspace: &workspace.Workspace{
+			Id:             int32(ws.ID),
+			Tag:            ws.Tag,
+			Name:           ws.Name,
+			OrganizationId: int32(ws.OrganizationID),
+			OwnerId:        int32(ws.OwnerID),
+			Provider:       ws.Provider,
+			Status:         convertStatus(ws.Status),
+			Config:         ws.Config,
+			Region:         ws.Region,
+			CreatedAt:      &common.Timestamp{Value: ws.CreatedAt.Format(time.RFC3339)},
+			UpdatedAt:      &common.Timestamp{Value: ws.UpdatedAt.Format(time.RFC3339)},
+		},
+	}, nil
 }
 
 // CreateWorkspace implements the gRPC handler for creating workspace
 func (s *Server) CreateWorkspace(ctx context.Context, req *workspace.CreateWorkspaceRequest) (*workspace.WorkspaceResponse, error) {
-	return &workspace.WorkspaceResponse{}, nil
+	// Get current user from context (placeholder - would be set by auth middleware)
+	userID := int32(1)
+	now := time.Now()
+
+	// Generate unique tag
+	tag := fmt.Sprintf("ws-%d-%d", userID, now.UnixNano())
+
+	// Build config JSON from language list
+	config := fmt.Sprintf(`{"cpu":%d,"memory":%d,"storage":%d,"languages":[%s]}`,
+		req.Cpu, req.Memory, req.Storage,
+		buildLanguageJSON(req.Languages))
+
+	result, err := db.DB.ExecContext(ctx,
+		`INSERT INTO workspaces (tag, name, organization_id, owner_id, provider, status, config, region, created_at, updated_at) 
+		 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+		tag, req.Name, req.OrganizationId, userID, "podman", "creating", config, req.Region, now, now,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create workspace: %w", err)
+	}
+
+	wsID, err := result.LastInsertId()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get workspace ID: %w", err)
+	}
+
+	return &workspace.WorkspaceResponse{
+		Workspace: &workspace.Workspace{
+			Id:             int32(wsID),
+			Tag:            tag,
+			Name:           req.Name,
+			OrganizationId: req.OrganizationId,
+			OwnerId:        userID,
+			Provider:       "podman",
+			Status:         common.Status_STATUS_CREATING,
+			Cpu:            req.Cpu,
+			Memory:         req.Memory,
+			Storage:        req.Storage,
+			Region:         req.Region,
+			Config:         config,
+			CreatedAt:      &common.Timestamp{Value: now.Format(time.RFC3339)},
+			UpdatedAt:      &common.Timestamp{Value: now.Format(time.RFC3339)},
+		},
+	}, nil
+}
+
+// Helper function to build JSON array of languages
+func buildLanguageJSON(languages []string) string {
+	if len(languages) == 0 {
+		return ""
+	}
+	result := ""
+	for i, lang := range languages {
+		if i > 0 {
+			result += ","
+		}
+		result += fmt.Sprintf(`"%s"`, lang)
+	}
+	return result
 }
 
 // UpdateWorkspace implements the gRPC handler for updating workspace
 func (s *Server) UpdateWorkspace(ctx context.Context, req *workspace.UpdateWorkspaceRequest) (*workspace.WorkspaceResponse, error) {
-	return &workspace.WorkspaceResponse{}, nil
+	var ws models.Workspace
+	err := db.DB.QueryRowContext(ctx,
+		`SELECT id, tag, name, organization_id, owner_id, provider, status, config, region, cpu, memory, storage, created_at, updated_at 
+		 FROM workspaces WHERE id = ? AND deleted_at IS NULL`,
+		req.Id,
+	).Scan(&ws.ID, &ws.Tag, &ws.Name, &ws.OrganizationID, &ws.OwnerID, &ws.Provider, &ws.Status, &ws.Config, &ws.Region)
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to get workspace: %w", err)
+	}
+
+	// Update fields if provided
+	name := ws.Name
+	if req.Name != "" {
+		name = req.Name
+	}
+
+	now := time.Now()
+	_, err = db.DB.ExecContext(ctx,
+		`UPDATE workspaces SET name = ?, updated_at = ? WHERE id = ?`,
+		name, now, req.Id,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to update workspace: %w", err)
+	}
+
+	return &workspace.WorkspaceResponse{
+		Workspace: &workspace.Workspace{
+			Id:             int32(ws.ID),
+			Tag:            ws.Tag,
+			Name:           name,
+			OrganizationId: int32(ws.OrganizationID),
+			OwnerId:        int32(ws.OwnerID),
+			Provider:       ws.Provider,
+			Status:         convertStatus(ws.Status),
+			Region:         ws.Region,
+			CreatedAt:      &common.Timestamp{Value: ws.CreatedAt.Format(time.RFC3339)},
+			UpdatedAt:      &common.Timestamp{Value: now.Format(time.RFC3339)},
+		},
+	}, nil
 }
 
 // DeleteWorkspace implements the gRPC handler for deleting workspace
 func (s *Server) DeleteWorkspace(ctx context.Context, req *workspace.DeleteWorkspaceRequest) (*common.Empty, error) {
+	now := time.Now()
+	result, err := db.DB.ExecContext(ctx,
+		`UPDATE workspaces SET deleted_at = ?, status = 'deleting' WHERE id = ?`,
+		now, req.Id,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to delete workspace: %w", err)
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get rows affected: %w", err)
+	}
+	if rowsAffected == 0 {
+		return nil, fmt.Errorf("workspace not found")
+	}
+
 	return &common.Empty{}, nil
 }
 
 // StartWorkspace implements the gRPC handler for starting workspace
 func (s *Server) StartWorkspace(ctx context.Context, req *workspace.StartWorkspaceRequest) (*workspace.WorkspaceResponse, error) {
-	return &workspace.WorkspaceResponse{}, nil
+	var ws models.Workspace
+	err := db.DB.QueryRowContext(ctx,
+		`SELECT id, tag, name, organization_id, owner_id, provider, status, config, region, created_at, updated_at 
+		 FROM workspaces WHERE id = ? AND deleted_at IS NULL`,
+		req.Id,
+	).Scan(&ws.ID, &ws.Tag, &ws.Name, &ws.OrganizationID, &ws.OwnerID, &ws.Provider, &ws.Status, &ws.Config, &ws.Region, &ws.CreatedAt, &ws.UpdatedAt)
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to get workspace: %w", err)
+	}
+
+	// Check if workspace is already running
+	if ws.Status == "running" || ws.Status == "active" {
+		return &workspace.WorkspaceResponse{
+			Workspace: &workspace.Workspace{
+				Id:             int32(ws.ID),
+				Tag:            ws.Tag,
+				Name:           ws.Name,
+				OrganizationId: int32(ws.OrganizationID),
+				OwnerId:        int32(ws.OwnerID),
+				Provider:       ws.Provider,
+				Status:         common.Status_STATUS_RUNNING,
+				CreatedAt:      &common.Timestamp{Value: ws.CreatedAt.Format(time.RFC3339)},
+				UpdatedAt:      &common.Timestamp{Value: ws.UpdatedAt.Format(time.RFC3339)},
+			},
+		}, nil
+	}
+
+	now := time.Now()
+	_, err = db.DB.ExecContext(ctx,
+		`UPDATE workspaces SET status = 'starting', updated_at = ? WHERE id = ?`,
+		now, req.Id,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to update workspace status: %w", err)
+	}
+
+	// TODO: Actually start the container via provisioner
+	// For now, simulate the state change
+
+	return &workspace.WorkspaceResponse{
+		Workspace: &workspace.Workspace{
+			Id:             int32(ws.ID),
+			Tag:            ws.Tag,
+			Name:           ws.Name,
+			OrganizationId: int32(ws.OrganizationID),
+			OwnerId:        int32(ws.OwnerID),
+			Provider:       ws.Provider,
+			Status:         common.Status_STATUS_CREATING,
+			CreatedAt:      &common.Timestamp{Value: ws.CreatedAt.Format(time.RFC3339)},
+			UpdatedAt:      &common.Timestamp{Value: now.Format(time.RFC3339)},
+		},
+	}, nil
 }
 
 // StopWorkspace implements the gRPC handler for stopping workspace
 func (s *Server) StopWorkspace(ctx context.Context, req *workspace.StopWorkspaceRequest) (*workspace.WorkspaceResponse, error) {
-	return &workspace.WorkspaceResponse{}, nil
+	var ws models.Workspace
+	err := db.DB.QueryRowContext(ctx,
+		`SELECT id, tag, name, organization_id, owner_id, provider, status, config, region, created_at, updated_at 
+		 FROM workspaces WHERE id = ? AND deleted_at IS NULL`,
+		req.Id,
+	).Scan(&ws.ID, &ws.Tag, &ws.Name, &ws.OrganizationID, &ws.OwnerID, &ws.Provider, &ws.Status, &ws.Config, &ws.Region, &ws.CreatedAt, &ws.UpdatedAt)
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to get workspace: %w", err)
+	}
+
+	// Check if workspace is already stopped
+	if ws.Status == "stopped" || ws.Status == "inactive" {
+		return &workspace.WorkspaceResponse{
+			Workspace: &workspace.Workspace{
+				Id:             int32(ws.ID),
+				Tag:            ws.Tag,
+				Name:           ws.Name,
+				OrganizationId: int32(ws.OrganizationID),
+				OwnerId:        int32(ws.OwnerID),
+				Provider:       ws.Provider,
+				Status:         common.Status_STATUS_STOPPED,
+				CreatedAt:      &common.Timestamp{Value: ws.CreatedAt.Format(time.RFC3339)},
+				UpdatedAt:      &common.Timestamp{Value: ws.UpdatedAt.Format(time.RFC3339)},
+			},
+		}, nil
+	}
+
+	now := time.Now()
+	_, err = db.DB.ExecContext(ctx,
+		`UPDATE workspaces SET status = 'stopping', updated_at = ? WHERE id = ?`,
+		now, req.Id,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to update workspace status: %w", err)
+	}
+
+	// TODO: Actually stop the container via provisioner
+	// For now, simulate the state change
+
+	return &workspace.WorkspaceResponse{
+		Workspace: &workspace.Workspace{
+			Id:             int32(ws.ID),
+			Tag:            ws.Tag,
+			Name:           ws.Name,
+			OrganizationId: int32(ws.OrganizationID),
+			OwnerId:        int32(ws.OwnerID),
+			Provider:       ws.Provider,
+			Status:         common.Status_STATUS_STOPPED,
+			CreatedAt:      &common.Timestamp{Value: ws.CreatedAt.Format(time.RFC3339)},
+			UpdatedAt:      &common.Timestamp{Value: now.Format(time.RFC3339)},
+		},
+	}, nil
 }
 
 // RestartWorkspace implements the gRPC handler for restarting workspace
 func (s *Server) RestartWorkspace(ctx context.Context, req *workspace.RestartWorkspaceRequest) (*workspace.WorkspaceResponse, error) {
-	return &workspace.WorkspaceResponse{}, nil
+	var ws models.Workspace
+	err := db.DB.QueryRowContext(ctx,
+		`SELECT id, tag, name, organization_id, owner_id, provider, status, config, region, created_at, updated_at 
+		 FROM workspaces WHERE id = ? AND deleted_at IS NULL`,
+		req.Id,
+	).Scan(&ws.ID, &ws.Tag, &ws.Name, &ws.OrganizationID, &ws.OwnerID, &ws.Provider, &ws.Status, &ws.Config, &ws.Region, &ws.CreatedAt, &ws.UpdatedAt)
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to get workspace: %w", err)
+	}
+
+	now := time.Now()
+	_, err = db.DB.ExecContext(ctx,
+		`UPDATE workspaces SET status = 'restarting', updated_at = ? WHERE id = ?`,
+		now, req.Id,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to update workspace status: %w", err)
+	}
+
+	// TODO: Actually restart the container via provisioner
+	// For now, simulate the state change
+
+	return &workspace.WorkspaceResponse{
+		Workspace: &workspace.Workspace{
+			Id:             int32(ws.ID),
+			Tag:            ws.Tag,
+			Name:           ws.Name,
+			OrganizationId: int32(ws.OrganizationID),
+			OwnerId:        int32(ws.OwnerID),
+			Provider:       ws.Provider,
+			Status:         common.Status_STATUS_CREATING,
+			CreatedAt:      &common.Timestamp{Value: ws.CreatedAt.Format(time.RFC3339)},
+			UpdatedAt:      &common.Timestamp{Value: now.Format(time.RFC3339)},
+		},
+	}, nil
 }
 
 // GetWorkspaceLogs implements the gRPC handler for getting workspace logs
