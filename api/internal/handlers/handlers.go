@@ -30,3 +30,33 @@ func Adapter(h Handler) http.HandlerFunc {
 		}
 	}
 }
+
+// Global audit log handler instance (initialized in main.go)
+var AuditLogHandlerInstance *AuditLogHandler
+
+// GetAuditLogsHandler wrapper for audit log handler
+func GetAuditLogsHandler(w http.ResponseWriter, r *http.Request) {
+	if AuditLogHandlerInstance != nil {
+		AuditLogHandlerInstance.GetAuditLogs(w, r)
+	} else {
+		http.Error(w, "Audit logging not configured", http.StatusServiceUnavailable)
+	}
+}
+
+// GetAuditLogByIDHandler wrapper for audit log handler
+func GetAuditLogByIDHandler(w http.ResponseWriter, r *http.Request) {
+	if AuditLogHandlerInstance != nil {
+		AuditLogHandlerInstance.GetAuditLogByID(w, r)
+	} else {
+		http.Error(w, "Audit logging not configured", http.StatusServiceUnavailable)
+	}
+}
+
+// GetAuditLogSummaryHandler wrapper for audit log handler
+func GetAuditLogSummaryHandler(w http.ResponseWriter, r *http.Request) {
+	if AuditLogHandlerInstance != nil {
+		AuditLogHandlerInstance.GetAuditLogSummary(w, r)
+	} else {
+		http.Error(w, "Audit logging not configured", http.StatusServiceUnavailable)
+	}
+}

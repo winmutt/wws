@@ -57,4 +57,10 @@ func SetupRoutes(r *mux.Router) {
 	workspaces.HandleFunc("/{id}/start", handlers.Adapter(handlers.StartWorkspaceHandler)).Methods("POST")
 	workspaces.HandleFunc("/{id}/stop", handlers.Adapter(handlers.StopWorkspaceHandler)).Methods("POST")
 	workspaces.HandleFunc("/{id}/restart", handlers.Adapter(handlers.RestartWorkspaceHandler)).Methods("POST")
+
+	// Audit log routes (admin only)
+	audit := api.PathPrefix("/audit").Subrouter()
+	audit.HandleFunc("", handlers.GetAuditLogsHandler).Methods("GET")
+	audit.HandleFunc("/{id}", handlers.GetAuditLogByIDHandler).Methods("GET")
+	audit.HandleFunc("/summary", handlers.GetAuditLogSummaryHandler).Methods("GET")
 }
