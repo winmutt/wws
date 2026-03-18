@@ -96,3 +96,46 @@ type AuditLogFilter struct {
 	Limit          int
 	Offset         int
 }
+
+// ResourceQuota represents quota limits for an organization
+type ResourceQuota struct {
+	ID                  int       `db:"id" json:"id"`
+	OrganizationID      int       `db:"organization_id" json:"organization_id"`
+	MaxWorkspaces       int       `db:"max_workspaces" json:"max_workspaces"`
+	MaxUsers            int       `db:"max_users" json:"max_users"`
+	MaxStorageGB        int       `db:"max_storage_gb" json:"max_storage_gb"`
+	MaxComputeHours     int       `db:"max_compute_hours" json:"max_compute_hours"`
+	MaxNetworkBandwidth int       `db:"max_network_bandwidth" json:"max_network_bandwidth"`
+	CreatedAt           time.Time `db:"created_at" json:"created_at"`
+	UpdatedAt           time.Time `db:"updated_at" json:"updated_at"`
+}
+
+// QuotaUsage represents current usage of resources
+type QuotaUsage struct {
+	ID                   int       `db:"id" json:"id"`
+	OrganizationID       int       `db:"organization_id" json:"organization_id"`
+	WorkspacesCount      int       `db:"workspaces_count" json:"workspaces_count"`
+	UsersCount           int       `db:"users_count" json:"users_count"`
+	StorageUsedGB        int       `db:"storage_used_gb" json:"storage_used_gb"`
+	ComputeHoursUsed     int       `db:"compute_hours_used" json:"compute_hours_used"`
+	NetworkBandwidthUsed int       `db:"network_bandwidth_used" json:"network_bandwidth_used"`
+	UpdatedAt            time.Time `db:"updated_at" json:"updated_at"`
+}
+
+// QuotaCheckResult represents the result of a quota check
+type QuotaCheckResult struct {
+	Allowed  bool   `json:"allowed"`
+	Resource string `json:"resource"`
+	Current  int    `json:"current"`
+	Limit    int    `json:"limit"`
+	Message  string `json:"message"`
+}
+
+// QuotaUpdateRequest for updating quotas
+type QuotaUpdateRequest struct {
+	MaxWorkspaces       int `json:"max_workspaces"`
+	MaxUsers            int `json:"max_users"`
+	MaxStorageGB        int `json:"max_storage_gb"`
+	MaxComputeHours     int `json:"max_compute_hours"`
+	MaxNetworkBandwidth int `json:"max_network_bandwidth"`
+}

@@ -63,4 +63,12 @@ func SetupRoutes(r *mux.Router) {
 	audit.HandleFunc("", handlers.GetAuditLogsHandler).Methods("GET")
 	audit.HandleFunc("/{id}", handlers.GetAuditLogByIDHandler).Methods("GET")
 	audit.HandleFunc("/summary", handlers.GetAuditLogSummaryHandler).Methods("GET")
+
+	// Resource quota routes
+	quotas := api.PathPrefix("/quotas").Subrouter()
+	quotas.HandleFunc("", handlers.QuotaGetHandler).Methods("GET")
+	quotas.HandleFunc("", handlers.QuotaUpdateHandler).Methods("PUT")
+	quotas.HandleFunc("/usage", handlers.QuotaUsageHandler).Methods("GET")
+	quotas.HandleFunc("/usage", handlers.QuotaUpdateUsageHandler).Methods("POST")
+	quotas.HandleFunc("/check", handlers.QuotaCheckHandler).Methods("POST")
 }

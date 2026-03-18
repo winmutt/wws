@@ -52,6 +52,54 @@ func GetAuditLogByIDHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// Global quota handler instance (initialized in main.go)
+var QuotaHandlerInstance *QuotaHandler
+
+// QuotaGetHandler wrapper for quota get handler
+func QuotaGetHandler(w http.ResponseWriter, r *http.Request) {
+	if QuotaHandlerInstance != nil {
+		QuotaHandlerInstance.GetQuota(w, r)
+	} else {
+		http.Error(w, "Quota management not configured", http.StatusServiceUnavailable)
+	}
+}
+
+// QuotaUpdateHandler wrapper for quota update handler
+func QuotaUpdateHandler(w http.ResponseWriter, r *http.Request) {
+	if QuotaHandlerInstance != nil {
+		QuotaHandlerInstance.UpdateQuota(w, r)
+	} else {
+		http.Error(w, "Quota management not configured", http.StatusServiceUnavailable)
+	}
+}
+
+// QuotaUsageHandler wrapper for quota usage handler
+func QuotaUsageHandler(w http.ResponseWriter, r *http.Request) {
+	if QuotaHandlerInstance != nil {
+		QuotaHandlerInstance.GetUsage(w, r)
+	} else {
+		http.Error(w, "Quota management not configured", http.StatusServiceUnavailable)
+	}
+}
+
+// QuotaUpdateUsageHandler wrapper for quota update usage handler
+func QuotaUpdateUsageHandler(w http.ResponseWriter, r *http.Request) {
+	if QuotaHandlerInstance != nil {
+		QuotaHandlerInstance.UpdateUsage(w, r)
+	} else {
+		http.Error(w, "Quota management not configured", http.StatusServiceUnavailable)
+	}
+}
+
+// QuotaCheckHandler wrapper for quota check handler
+func QuotaCheckHandler(w http.ResponseWriter, r *http.Request) {
+	if QuotaHandlerInstance != nil {
+		QuotaHandlerInstance.CheckQuota(w, r)
+	} else {
+		http.Error(w, "Quota management not configured", http.StatusServiceUnavailable)
+	}
+}
+
 // GetAuditLogSummaryHandler wrapper for audit log handler
 func GetAuditLogSummaryHandler(w http.ResponseWriter, r *http.Request) {
 	if AuditLogHandlerInstance != nil {

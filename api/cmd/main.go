@@ -36,6 +36,9 @@ func main() {
 	// Initialize audit log handler
 	handlers.AuditLogHandlerInstance = &handlers.AuditLogHandler{DB: db.DB}
 
+	// Initialize quota handler
+	handlers.QuotaHandlerInstance = &handlers.QuotaHandler{DB: db.DB}
+
 	r := mux.NewRouter()
 
 	routes.SetupRoutes(r)
