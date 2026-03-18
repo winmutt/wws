@@ -128,6 +128,32 @@ func createTables() {
 		FOREIGN KEY (accepted_by) REFERENCES users(id)
 	);`
 
+	auditLogsTable := `
+	CREATE TABLE IF NOT EXISTS audit_logs (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		user_id INTEGER NOT NULL,
+		username TEXT NOT NULL,
+		organization_id INTEGER,
+		action TEXT NOT NULL,
+		resource_type TEXT NOT NULL,
+		resource_id INTEGER,
+		ip_address TEXT NOT NULL,
+		user_agent TEXT,
+		details TEXT,
+		success INTEGER NOT NULL DEFAULT 1,
+		error_message TEXT,
+		created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+		FOREIGN KEY (user_id) REFERENCES users(id),
+		FOREIGN KEY (organization_id) REFERENCES organizations(id)
+	);`
+
+	// Create indexes for common queries
+	auditLogsIndex1 := `CREATE INDEX IF NOT EXISTS idx_audit_logs_user_id ON audit_logs(user_id);`
+	auditLogsIndex2 := `CREATE INDEX IF NOT EXISTS idx_audit_logs_org_id ON audit_logs(organization_id);`
+	auditLogsIndex3 := `CREATE INDEX IF NOT EXISTS idx_audit_logs_created_at ON audit_logs(created_at);`
+	auditLogsIndex4 := `CREATE INDEX IF NOT EXISTS idx_audit_logs_action ON audit_logs(action);`
+	auditLogsIndex5 := `CREATE INDEX IF NOT EXISTS idx_audit_logs_resource_type ON audit_logs(resource_type);`
+
 	statements := []string{
 		usersTable,
 		organizationsTable,
@@ -138,6 +164,12 @@ func createTables() {
 		sessionsTable,
 		oauthStatesTable,
 		invitationsTable,
+		auditLogsTable,
+		auditLogsIndex1,
+		auditLogsIndex2,
+		auditLogsIndex3,
+		auditLogsIndex4,
+		auditLogsIndex5,
 	}
 
 	for _, stmt := range statements {

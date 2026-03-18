@@ -12,7 +12,9 @@ import (
 
 	"github.com/gorilla/mux"
 
+	"wws/api/internal/db"
 	"wws/api/internal/grpc"
+	"wws/api/internal/handlers"
 	"wws/api/internal/middleware"
 	"wws/api/internal/routes"
 	"wws/api/pkg"
@@ -24,6 +26,16 @@ func main() {
 		log.Fatalf("Failed to load config: %v", err)
 	}
 
+	// Initialize database
+	dbPath := os.Getenv("DATABASE_PATH")
+	if dbPath == "" {
+		dbPath = "./data/wws.db"
+	}
+	db.Init(dbPath)
+
+	// Initialize audit log handler
+	handlers.AuditLogHandlerInstance = &handlers.AuditLogHandler{DB: db.DB}
+
 	r := mux.NewRouter()
 
 	routes.SetupRoutes(r)
@@ -31,6 +43,7 @@ func main() {
 	r.Use(middleware.CORSMiddleware(config.Server.CORS.Origins))
 	r.Use(middleware.Logging)
 	r.Use(middleware.Recovery)
+	r.Use(middleware.AuditMiddleware(db.DB))
 
 	httpPort := os.Getenv("PORT")
 	if httpPort == "" {

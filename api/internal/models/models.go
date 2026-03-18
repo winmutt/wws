@@ -66,3 +66,33 @@ type OAuthState struct {
 	State     string    `db:"state" json:"state"`
 	CreatedAt time.Time `db:"created_at" json:"created_at"`
 }
+
+// AuditLog represents an audit trail entry for tracking all operations
+type AuditLog struct {
+	ID             int       `db:"id" json:"id"`
+	UserID         int       `db:"user_id" json:"user_id"`
+	Username       string    `db:"username" json:"username"`
+	OrganizationID *int      `db:"organization_id" json:"organization_id,omitempty"`
+	Action         string    `db:"action" json:"action"`
+	ResourceType   string    `db:"resource_type" json:"resource_type"`
+	ResourceID     *int      `db:"resource_id" json:"resource_id,omitempty"`
+	IPAddress      string    `db:"ip_address" json:"ip_address"`
+	UserAgent      string    `db:"user_agent" json:"user_agent"`
+	Details        string    `db:"details" json:"details"`
+	Success        bool      `db:"success" json:"success"`
+	ErrorMessage   *string   `db:"error_message" json:"error_message,omitempty"`
+	CreatedAt      time.Time `db:"created_at" json:"created_at"`
+}
+
+// AuditLogFilter for querying audit logs
+type AuditLogFilter struct {
+	UserID         *int
+	OrganizationID *int
+	Action         string
+	ResourceType   string
+	StartDate      time.Time
+	EndDate        time.Time
+	Success        *bool
+	Limit          int
+	Offset         int
+}
