@@ -122,8 +122,10 @@
 - [ ] 2.2.6 Build auto-shutdown logic for idle workspaces
 - [ ] 2.2.7 Create resource usage alerts
 - [ ] 2.2.8 Implement workspace scaling
+- [ ] 2.2.9 Build workspace history
+- [ ] 2.2.10 Create workspace export/import
 
-### 2.3 Protocol Buffers Migration - Priority: High
+### 2.3 Protocol Buffers Migration - Priority: High ✅ Complete
 - [x] 2.3.1 Define protobuf schemas for all API messages (PR #248)
 - [x] 2.3.2 Set up protobuf compilation in CI/CD pipeline (PR #248)
 - [x] 2.3.3 Generate Go code from protobuf schemas (PR #248)
@@ -136,28 +138,26 @@
 - [x] 2.3.10 Migrate workspace endpoints to protobuf (PR #248)
 - [x] 2.3.11 Add protobuf validation tests (PR #248)
 - [x] 2.3.12 Update API documentation for protobuf endpoints (PR #249)
-- [ ] 2.2.9 Build workspace history
-- [ ] 2.2.10 Create workspace export/import
 
-### 2.3 Security
-- [ ] 2.3.1 Implement audit logging
-- [ ] 2.3.2 Create resource quotas per workspace/user
-- [ ] 2.3.3 Build network isolation between workspaces
-- [ ] 2.3.4 Implement auto-expiring credentials
-- [ ] 2.3.5 Create encryption at rest
-- [ ] 2.3.6 Build security scanning
-- [ ] 2.3.7 Implement rate limiting
-- [ ] 2.3.8 Create API key management
-- [ ] 2.3.9 Build compliance reporting
-- [ ] 2.3.10 Implement secret scanning
+### 2.4 Security - Priority: High
+- [ ] 2.4.1 Implement audit logging
+- [ ] 2.4.2 Create resource quotas per workspace/user
+- [ ] 2.4.3 Build network isolation between workspaces
+- [ ] 2.4.4 Implement auto-expiring credentials
+- [ ] 2.4.5 Create encryption at rest
+- [ ] 2.4.6 Build security scanning
+- [ ] 2.4.7 Implement rate limiting
+- [ ] 2.4.8 Create API key management
+- [ ] 2.4.9 Build compliance reporting
+- [ ] 2.4.10 Implement secret scanning
 
-### 2.4 Testing Phase 2
-- [ ] 2.4.1 Write unit tests for collaboration features
-- [ ] 2.4.2 Write integration tests for team management
-- [ ] 2.4.3 Write E2E tests for security features
-- [ ] 2.4.4 Test resource monitoring
-- [ ] 2.4.5 Test backup/restore
-- [ ] 2.4.6 Test idle shutdown
+### 2.5 Testing Phase 2
+- [ ] 2.5.1 Write unit tests for collaboration features
+- [ ] 2.5.2 Write integration tests for team management
+- [ ] 2.5.3 Write E2E tests for security features
+- [ ] 2.5.4 Test resource monitoring
+- [ ] 2.5.5 Test backup/restore
+- [ ] 2.5.6 Test idle shutdown
 
 ## Phase 3: Advanced Features - Priority: Low
 
