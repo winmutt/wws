@@ -43,6 +43,7 @@ func main() {
 	r.Use(middleware.CORSMiddleware(config.Server.CORS.Origins))
 	r.Use(middleware.Logging)
 	r.Use(middleware.Recovery)
+	r.Use(middleware.RateLimitMiddleware(middleware.DefaultRateLimitConfig()))
 	r.Use(middleware.AuditMiddleware(db.DB))
 
 	httpPort := os.Getenv("PORT")
