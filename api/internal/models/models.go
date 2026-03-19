@@ -139,3 +139,42 @@ type QuotaUpdateRequest struct {
 	MaxComputeHours     int `json:"max_compute_hours"`
 	MaxNetworkBandwidth int `json:"max_network_bandwidth"`
 }
+
+// APIKey represents an API key for authentication
+type APIKey struct {
+	ID          int        `db:"id" json:"id"`
+	UserID      int        `db:"user_id" json:"user_id"`
+	Name        string     `db:"name" json:"name"`
+	KeyHash     string     `db:"key_hash" json:"-"`
+	KeyPrefix   string     `db:"key_prefix" json:"key_prefix"` // First 8 chars for identification
+	Permissions string     `db:"permissions" json:"permissions"`
+	ExpiresAt   *time.Time `db:"expires_at" json:"expires_at,omitempty"`
+	CreatedAt   time.Time  `db:"created_at" json:"created_at"`
+	LastUsedAt  *time.Time `db:"last_used_at" json:"last_used_at,omitempty"`
+}
+
+// APIKeyCreateRequest for creating API keys
+type APIKeyCreateRequest struct {
+	Name        string `json:"name"`
+	Permissions string `json:"permissions"`
+	ExpiresIn   *int   `json:"expires_in,omitempty"` // Hours until expiry
+}
+
+// APIKeyResponse for API key responses (without full key)
+type APIKeyResponse struct {
+	ID          int        `json:"id"`
+	UserID      int        `json:"user_id"`
+	Name        string     `json:"name"`
+	KeyPrefix   string     `json:"key_prefix"`
+	Permissions string     `json:"permissions"`
+	ExpiresAt   *time.Time `json:"expires_at,omitempty"`
+	CreatedAt   time.Time  `json:"created_at"`
+	LastUsedAt  *time.Time `json:"last_used_at,omitempty"`
+	NewKey      *string    `json:"new_key,omitempty"` // Only on creation
+}
+
+// APIKeyListResponse for listing API keys
+type APIKeyListResponse struct {
+	APIKeys []APIKeyResponse `json:"api_keys"`
+	Total   int              `json:"total"`
+}
