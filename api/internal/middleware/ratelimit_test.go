@@ -318,8 +318,8 @@ func TestTokenRefill(t *testing.T) {
 	}
 
 	config := RateLimitConfig{
-		AnonymousRPM:     60, // 1 token per second
-		CleanupInterval:  time.Minute,
+		AnonymousRPM:    60, // 1 token per second
+		CleanupInterval: time.Minute,
 	}
 
 	limiter := NewRateLimiter(config)
