@@ -147,12 +147,43 @@ func createTables() {
 		FOREIGN KEY (organization_id) REFERENCES organizations(id)
 	);`
 
+	resourceQuotasTable := `
+	CREATE TABLE IF NOT EXISTS resource_quotas (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		organization_id INTEGER NOT NULL UNIQUE,
+		max_workspaces INTEGER NOT NULL DEFAULT 10,
+		max_users INTEGER NOT NULL DEFAULT 5,
+		max_storage_gb INTEGER NOT NULL DEFAULT 50,
+		max_compute_hours INTEGER NOT NULL DEFAULT 100,
+		max_network_bandwidth INTEGER NOT NULL DEFAULT 1000,
+		created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+		updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+		FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE CASCADE
+	);`
+
+	quotaUsageTable := `
+	CREATE TABLE IF NOT EXISTS quota_usage (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		organization_id INTEGER NOT NULL UNIQUE,
+		workspaces_count INTEGER NOT NULL DEFAULT 0,
+		users_count INTEGER NOT NULL DEFAULT 0,
+		storage_used_gb INTEGER NOT NULL DEFAULT 0,
+		compute_hours_used INTEGER NOT NULL DEFAULT 0,
+		network_bandwidth_used INTEGER NOT NULL DEFAULT 0,
+		updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+		FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE CASCADE
+	);`
+
 	// Create indexes for common queries
 	auditLogsIndex1 := `CREATE INDEX IF NOT EXISTS idx_audit_logs_user_id ON audit_logs(user_id);`
 	auditLogsIndex2 := `CREATE INDEX IF NOT EXISTS idx_audit_logs_org_id ON audit_logs(organization_id);`
 	auditLogsIndex3 := `CREATE INDEX IF NOT EXISTS idx_audit_logs_created_at ON audit_logs(created_at);`
 	auditLogsIndex4 := `CREATE INDEX IF NOT EXISTS idx_audit_logs_action ON audit_logs(action);`
 	auditLogsIndex5 := `CREATE INDEX IF NOT EXISTS idx_audit_logs_resource_type ON audit_logs(resource_type);`
+
+	// Create indexes for resource quotas
+	quotaIndexes1 := `CREATE INDEX IF NOT EXISTS idx_resource_quotas_org_id ON resource_quotas(organization_id);`
+	quotaIndexes2 := `CREATE INDEX IF NOT EXISTS idx_quota_usage_org_id ON quota_usage(organization_id);`
 
 	statements := []string{
 		usersTable,
@@ -165,11 +196,15 @@ func createTables() {
 		oauthStatesTable,
 		invitationsTable,
 		auditLogsTable,
+		resourceQuotasTable,
+		quotaUsageTable,
 		auditLogsIndex1,
 		auditLogsIndex2,
 		auditLogsIndex3,
 		auditLogsIndex4,
 		auditLogsIndex5,
+		quotaIndexes1,
+		quotaIndexes2,
 	}
 
 	for _, stmt := range statements {
