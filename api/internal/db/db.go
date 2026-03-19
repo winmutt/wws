@@ -185,6 +185,25 @@ func createTables() {
 	quotaIndexes1 := `CREATE INDEX IF NOT EXISTS idx_resource_quotas_org_id ON resource_quotas(organization_id);`
 	quotaIndexes2 := `CREATE INDEX IF NOT EXISTS idx_quota_usage_org_id ON quota_usage(organization_id);`
 
+	// API keys table
+	apiKeysTable := `
+	CREATE TABLE IF NOT EXISTS api_keys (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		user_id INTEGER NOT NULL,
+		name TEXT NOT NULL,
+		key_hash TEXT NOT NULL UNIQUE,
+		key_prefix TEXT NOT NULL,
+		permissions TEXT NOT NULL DEFAULT 'read',
+		expires_at DATETIME,
+		created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+		last_used_at DATETIME,
+		FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+	);`
+
+	apiKeyIndexes1 := `CREATE INDEX IF NOT EXISTS idx_api_keys_user_id ON api_keys(user_id);`
+	apiKeyIndexes2 := `CREATE INDEX IF NOT EXISTS idx_api_keys_key_hash ON api_keys(key_hash);`
+	apiKeyIndexes3 := `CREATE INDEX IF NOT EXISTS idx_api_keys_expires_at ON api_keys(expires_at);`
+
 	statements := []string{
 		usersTable,
 		organizationsTable,
@@ -198,6 +217,7 @@ func createTables() {
 		auditLogsTable,
 		resourceQuotasTable,
 		quotaUsageTable,
+		apiKeysTable,
 		auditLogsIndex1,
 		auditLogsIndex2,
 		auditLogsIndex3,
@@ -205,6 +225,9 @@ func createTables() {
 		auditLogsIndex5,
 		quotaIndexes1,
 		quotaIndexes2,
+		apiKeyIndexes1,
+		apiKeyIndexes2,
+		apiKeyIndexes3,
 	}
 
 	for _, stmt := range statements {

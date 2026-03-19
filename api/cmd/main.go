@@ -39,6 +39,9 @@ func main() {
 	// Initialize quota handler
 	handlers.QuotaHandlerInstance = &handlers.QuotaHandler{DB: db.DB}
 
+	// Initialize API key handler
+	handlers.APIKeyHandlerInstance = &handlers.APIKeyHandler{DB: db.DB}
+
 	r := mux.NewRouter()
 
 	routes.SetupRoutes(r)

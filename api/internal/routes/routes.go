@@ -71,4 +71,10 @@ func SetupRoutes(r *mux.Router) {
 	quotas.HandleFunc("/usage", handlers.QuotaUsageHandler).Methods("GET")
 	quotas.HandleFunc("/usage", handlers.QuotaUpdateUsageHandler).Methods("POST")
 	quotas.HandleFunc("/check", handlers.QuotaCheckHandler).Methods("POST")
+
+	// API key routes
+	apiKeys := api.PathPrefix("/api-keys").Subrouter()
+	apiKeys.HandleFunc("", handlers.CreateAPIKeyHandler).Methods("POST")
+	apiKeys.HandleFunc("", handlers.ListAPIKeysHandler).Methods("GET")
+	apiKeys.HandleFunc("/{id}", handlers.DeleteAPIKeyHandler).Methods("DELETE")
 }

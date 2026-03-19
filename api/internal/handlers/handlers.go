@@ -108,3 +108,33 @@ func GetAuditLogSummaryHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Audit logging not configured", http.StatusServiceUnavailable)
 	}
 }
+
+// Global API key handler instance (initialized in main.go)
+var APIKeyHandlerInstance *APIKeyHandler
+
+// CreateAPIKeyHandler wrapper for API key create handler
+func CreateAPIKeyHandler(w http.ResponseWriter, r *http.Request) {
+	if APIKeyHandlerInstance != nil {
+		APIKeyHandlerInstance.CreateAPIKey(w, r)
+	} else {
+		http.Error(w, "API key management not configured", http.StatusServiceUnavailable)
+	}
+}
+
+// ListAPIKeysHandler wrapper for API key list handler
+func ListAPIKeysHandler(w http.ResponseWriter, r *http.Request) {
+	if APIKeyHandlerInstance != nil {
+		APIKeyHandlerInstance.ListAPIKeys(w, r)
+	} else {
+		http.Error(w, "API key management not configured", http.StatusServiceUnavailable)
+	}
+}
+
+// DeleteAPIKeyHandler wrapper for API key delete handler
+func DeleteAPIKeyHandler(w http.ResponseWriter, r *http.Request) {
+	if APIKeyHandlerInstance != nil {
+		APIKeyHandlerInstance.DeleteAPIKey(w, r)
+	} else {
+		http.Error(w, "API key management not configured", http.StatusServiceUnavailable)
+	}
+}
