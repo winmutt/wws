@@ -138,3 +138,60 @@ func DeleteAPIKeyHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "API key management not configured", http.StatusServiceUnavailable)
 	}
 }
+
+// Global compliance handler instance (initialized in main.go)
+var ComplianceHandlerInstance *ComplianceHandler
+
+// ComplianceGenerateReportHandler wrapper for compliance report generation
+func ComplianceGenerateReportHandler(w http.ResponseWriter, r *http.Request) {
+	if ComplianceHandlerInstance != nil {
+		ComplianceHandlerInstance.GenerateReport(w, r)
+	} else {
+		http.Error(w, "Compliance reporting not configured", http.StatusServiceUnavailable)
+	}
+}
+
+// ComplianceGetReportHandler wrapper for compliance get report handler
+func ComplianceGetReportHandler(w http.ResponseWriter, r *http.Request) {
+	if ComplianceHandlerInstance != nil {
+		ComplianceHandlerInstance.GetReport(w, r)
+	} else {
+		http.Error(w, "Compliance reporting not configured", http.StatusServiceUnavailable)
+	}
+}
+
+// ComplianceExportReportHandler wrapper for compliance export report handler
+func ComplianceExportReportHandler(w http.ResponseWriter, r *http.Request) {
+	if ComplianceHandlerInstance != nil {
+		ComplianceHandlerInstance.ExportReport(w, r)
+	} else {
+		http.Error(w, "Compliance reporting not configured", http.StatusServiceUnavailable)
+	}
+}
+
+// ComplianceGetScoreHandler wrapper for compliance get score handler
+func ComplianceGetScoreHandler(w http.ResponseWriter, r *http.Request) {
+	if ComplianceHandlerInstance != nil {
+		ComplianceHandlerInstance.GetScore(w, r)
+	} else {
+		http.Error(w, "Compliance reporting not configured", http.StatusServiceUnavailable)
+	}
+}
+
+// ComplianceListReportsHandler wrapper for compliance list reports handler
+func ComplianceListReportsHandler(w http.ResponseWriter, r *http.Request) {
+	if ComplianceHandlerInstance != nil {
+		ComplianceHandlerInstance.ListReports(w, r)
+	} else {
+		http.Error(w, "Compliance reporting not configured", http.StatusServiceUnavailable)
+	}
+}
+
+// ComplianceCheckComplianceStatusHandler wrapper for compliance status handler
+func ComplianceCheckComplianceStatusHandler(w http.ResponseWriter, r *http.Request) {
+	if ComplianceHandlerInstance != nil {
+		ComplianceHandlerInstance.CheckComplianceStatus(w, r)
+	} else {
+		http.Error(w, "Compliance reporting not configured", http.StatusServiceUnavailable)
+	}
+}

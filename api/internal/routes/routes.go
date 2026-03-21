@@ -77,4 +77,13 @@ func SetupRoutes(r *mux.Router) {
 	apiKeys.HandleFunc("", handlers.CreateAPIKeyHandler).Methods("POST")
 	apiKeys.HandleFunc("", handlers.ListAPIKeysHandler).Methods("GET")
 	apiKeys.HandleFunc("/{id}", handlers.DeleteAPIKeyHandler).Methods("DELETE")
+
+	// Compliance routes
+	compliance := api.PathPrefix("/compliance").Subrouter()
+	compliance.HandleFunc("/report", handlers.ComplianceGenerateReportHandler).Methods("POST")
+	compliance.HandleFunc("/report/{id}", handlers.ComplianceGetReportHandler).Methods("GET")
+	compliance.HandleFunc("/export", handlers.ComplianceExportReportHandler).Methods("POST")
+	compliance.HandleFunc("/score", handlers.ComplianceGetScoreHandler).Methods("POST")
+	compliance.HandleFunc("/reports", handlers.ComplianceListReportsHandler).Methods("GET")
+	compliance.HandleFunc("/status", handlers.ComplianceCheckComplianceStatusHandler).Methods("GET")
 }
