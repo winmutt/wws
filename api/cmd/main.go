@@ -12,6 +12,7 @@ import (
 
 	"github.com/gorilla/mux"
 
+	"wws/api/internal/compliance"
 	"wws/api/internal/crypto"
 	"wws/api/internal/db"
 	"wws/api/internal/grpc"
@@ -49,6 +50,18 @@ func main() {
 
 	// Initialize API key handler
 	handlers.APIKeyHandlerInstance = &handlers.APIKeyHandler{DB: db.DB}
+
+	// Initialize compliance report generator and handler
+	storagePath := os.Getenv("STORAGE_PATH")
+	if storagePath == "" {
+		storagePath = "./data"
+	}
+	auditLogPath := os.Getenv("AUDIT_LOG_PATH")
+	if auditLogPath == "" {
+		auditLogPath = "./data/audit_logs"
+	}
+	reportGenerator := compliance.NewComplianceReportGenerator(auditLogPath, storagePath)
+	handlers.ComplianceHandlerInstance = handlers.NewComplianceHandler(reportGenerator)
 
 	r := mux.NewRouter()
 
