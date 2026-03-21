@@ -13,6 +13,7 @@ import (
 	"github.com/gorilla/mux"
 
 	"wws/api/internal/compliance"
+	"wws/api/internal/crypto"
 	"wws/api/internal/db"
 	"wws/api/internal/grpc"
 	"wws/api/internal/handlers"
@@ -33,6 +34,13 @@ func main() {
 		dbPath = "./data/wws.db"
 	}
 	db.Init(dbPath)
+
+	// Initialize encryption for sensitive data at rest
+	if err := crypto.InitEncryption(); err != nil {
+		log.Printf("Warning: %v. Some sensitive data may not be encrypted.", err)
+	} else {
+		log.Println("Encryption initialized for data at rest")
+	}
 
 	// Initialize audit log handler
 	handlers.AuditLogHandlerInstance = &handlers.AuditLogHandler{DB: db.DB}

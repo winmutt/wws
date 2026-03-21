@@ -182,3 +182,130 @@ func TestEncryptLongToken(t *testing.T) {
 		t.Errorf("decrypted '%s' does not match original '%s'", decrypted, longToken)
 	}
 }
+
+func TestIsInitialized(t *testing.T) {
+	os.Unsetenv("WWS_ENCRYPTION_KEY")
+	os.Unsetenv("GITHUB_CLIENT_SECRET")
+	initialized = false
+
+	if IsInitialized() {
+		t.Error("IsInitialized should return false before initialization")
+	}
+
+	os.Setenv("WWS_ENCRYPTION_KEY", "test-key")
+	InitEncryption()
+
+	if !IsInitialized() {
+		t.Error("IsInitialized should return true after initialization")
+	}
+}
+
+func TestEncryptDecryptBytes(t *testing.T) {
+	os.Setenv("WWS_ENCRYPTION_KEY", "test-key-bytes")
+	InitEncryption()
+
+	plaintext := []byte("sensitive-binary-data-\x00\x01\x02")
+
+	encrypted, err := EncryptBytes(plaintext)
+	if err != nil {
+		t.Fatalf("EncryptBytes failed: %v", err)
+	}
+
+	if len(encrypted) == 0 {
+		t.Error("encrypted result is empty")
+	}
+
+	decrypted, err := DecryptBytes(encrypted)
+	if err != nil {
+		t.Fatalf("DecryptBytes failed: %v", err)
+	}
+
+	if string(decrypted) != string(plaintext) {
+		t.Errorf("decrypted '%s' does not match original '%s'", string(decrypted), string(plaintext))
+	}
+}
+
+func TestGenerateEncryptionKey(t *testing.T) {
+	key1, err := GenerateEncryptionKey()
+	if err != nil {
+		t.Fatalf("GenerateEncryptionKey failed: %v", err)
+	}
+
+	if key1 == "" {
+		t.Error("generated key should not be empty")
+	}
+
+	// Verify key can be used
+	os.Setenv("WWS_ENCRYPTION_KEY", key1)
+	InitEncryption()
+
+	encrypted, _ := Encrypt("test")
+	decrypted, _ := Decrypt(encrypted)
+	if decrypted != "test" {
+		t.Error("generated key should work for encryption")
+	}
+}
+
+func TestValidateKey(t *testing.T) {
+	t.Run("validates valid key", func(t *testing.T) {
+		key, _ := GenerateEncryptionKey()
+		err := ValidateKey(key)
+		if err != nil {
+			t.Errorf("Expected no error, got %v", err)
+		}
+	})
+
+	t.Run("validates empty key", func(t *testing.T) {
+		err := ValidateKey("")
+		if err != ErrEncryptionNotInitialized {
+			t.Errorf("Expected ErrEncryptionNotInitialized, got %v", err)
+		}
+	})
+
+	t.Run("validates short base64 key", func(t *testing.T) {
+		err := ValidateKey("YWJj") // "abc" in base64 = 3 bytes
+		if err == nil {
+			t.Error("Expected error for short key")
+		}
+	})
+}
+
+func TestEncryptBytesEmpty(t *testing.T) {
+	os.Setenv("WWS_ENCRYPTION_KEY", "test-key")
+	InitEncryption()
+
+	_, err := EncryptBytes([]byte{})
+	if err != ErrEmptyData {
+		t.Errorf("Expected ErrEmptyData, got %v", err)
+	}
+}
+
+func TestDecryptBytesEmpty(t *testing.T) {
+	os.Setenv("WWS_ENCRYPTION_KEY", "test-key")
+	InitEncryption()
+
+	_, err := DecryptBytes([]byte{})
+	if err != ErrEmptyData {
+		t.Errorf("Expected ErrEmptyData, got %v", err)
+	}
+}
+
+func TestEncryptNotInitialized(t *testing.T) {
+	initialized = false
+	encryptionKey = nil
+
+	_, err := Encrypt("test")
+	if err == nil {
+		t.Error("Expected error when encryption not initialized")
+	}
+}
+
+func TestEncryptBytesNotInitialized(t *testing.T) {
+	initialized = false
+	encryptionKey = nil
+
+	_, err := EncryptBytes([]byte("test"))
+	if err != ErrEncryptionNotInitialized {
+		t.Errorf("Expected ErrEncryptionNotInitialized, got %v", err)
+	}
+}
