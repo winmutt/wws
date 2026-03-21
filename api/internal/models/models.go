@@ -178,3 +178,76 @@ type APIKeyListResponse struct {
 	APIKeys []APIKeyResponse `json:"api_keys"`
 	Total   int              `json:"total"`
 }
+
+// WorkspaceMember represents a member with access to a workspace
+type WorkspaceMember struct {
+	ID          int        `db:"id" json:"id"`
+	WorkspaceID int        `db:"workspace_id" json:"workspace_id"`
+	UserID      int        `db:"user_id" json:"user_id"`
+	Username    string     `db:"username" json:"username"`
+	Email       string     `db:"email" json:"email"`
+	Role        string     `db:"role" json:"role"`               // "owner", "admin", "editor", "viewer"
+	Permissions string     `db:"permissions" json:"permissions"` // JSON string of permissions
+	InvitedAt   time.Time  `db:"invited_at" json:"invited_at"`
+	JoinedAt    *time.Time `db:"joined_at" json:"joined_at,omitempty"`
+	InvitedBy   int        `db:"invited_by" json:"invited_by"`
+	Status      string     `db:"status" json:"status"` // "pending", "active", "removed"
+}
+
+// WorkspaceMemberRole defines workspace member roles
+type WorkspaceMemberRole string
+
+const (
+	RoleOwner  WorkspaceMemberRole = "owner"
+	RoleAdmin  WorkspaceMemberRole = "admin"
+	RoleEditor WorkspaceMemberRole = "editor"
+	RoleViewer WorkspaceMemberRole = "viewer"
+)
+
+// WorkspaceMemberPermissions defines granular permissions
+type WorkspaceMemberPermissions struct {
+	CanView        bool `json:"can_view"`
+	CanEdit        bool `json:"can_edit"`
+	CanShare       bool `json:"can_share"`
+	CanDelete      bool `json:"can_delete"`
+	CanManageUsers bool `json:"can_manage_users"`
+	CanViewLogs    bool `json:"can_view_logs"`
+	CanStartStop   bool `json:"can_start_stop"`
+}
+
+// WorkspaceShareRequest for sharing a workspace
+type WorkspaceShareRequest struct {
+	UserID      *int                        `json:"user_id,omitempty"`
+	Username    *string                     `json:"username,omitempty"`
+	Email       *string                     `json:"email,omitempty"`
+	Role        string                      `json:"role"`
+	Permissions *WorkspaceMemberPermissions `json:"permissions,omitempty"`
+}
+
+// WorkspaceShareResponse for share responses
+type WorkspaceShareResponse struct {
+	ID          int                        `json:"id"`
+	WorkspaceID int                        `json:"workspace_id"`
+	UserID      int                        `json:"user_id"`
+	Username    string                     `json:"username"`
+	Email       string                     `json:"email"`
+	Role        string                     `json:"role"`
+	Permissions WorkspaceMemberPermissions `json:"permissions"`
+	Status      string                     `json:"status"`
+	InvitedAt   time.Time                  `json:"invited_at"`
+	InvitedBy   int                        `json:"invited_by"`
+}
+
+// WorkspaceListMembersResponse for listing workspace members
+type WorkspaceListMembersResponse struct {
+	Members []WorkspaceShareResponse `json:"members"`
+	Total   int                      `json:"total"`
+}
+
+// WorkspaceSharingSettings for workspace sharing configuration
+type WorkspaceSharingSettings struct {
+	AllowExternalSharing bool   `json:"allow_external_sharing"`
+	DefaultRole          string `json:"default_role"`
+	RequireApproval      bool   `json:"require_approval"`
+	MaxMembers           int    `json:"max_members"`
+}

@@ -185,6 +185,29 @@ func createTables() {
 	quotaIndexes1 := `CREATE INDEX IF NOT EXISTS idx_resource_quotas_org_id ON resource_quotas(organization_id);`
 	quotaIndexes2 := `CREATE INDEX IF NOT EXISTS idx_quota_usage_org_id ON quota_usage(organization_id);`
 
+	// Workspace members table for shared workspaces
+	workspaceMembersTable := `
+	CREATE TABLE IF NOT EXISTS workspace_members (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		workspace_id INTEGER NOT NULL,
+		user_id INTEGER NOT NULL,
+		username TEXT NOT NULL,
+		email TEXT,
+		role TEXT NOT NULL DEFAULT 'viewer',
+		permissions TEXT NOT NULL DEFAULT '{}',
+		invited_by INTEGER,
+		invited_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+		joined_at DATETIME,
+		status TEXT NOT NULL DEFAULT 'pending',
+		FOREIGN KEY (workspace_id) REFERENCES workspaces(id) ON DELETE CASCADE,
+		FOREIGN KEY (user_id) REFERENCES users(id),
+		FOREIGN KEY (invited_by) REFERENCES users(id)
+	);`
+
+	workspaceMembersIndex1 := `CREATE INDEX IF NOT EXISTS idx_workspace_members_workspace_id ON workspace_members(workspace_id);`
+	workspaceMembersIndex2 := `CREATE INDEX IF NOT EXISTS idx_workspace_members_user_id ON workspace_members(user_id);`
+	workspaceMembersIndex3 := `CREATE INDEX IF NOT EXISTS idx_workspace_members_status ON workspace_members(status);`
+
 	// API keys table
 	apiKeysTable := `
 	CREATE TABLE IF NOT EXISTS api_keys (
@@ -217,6 +240,7 @@ func createTables() {
 		auditLogsTable,
 		resourceQuotasTable,
 		quotaUsageTable,
+		workspaceMembersTable,
 		apiKeysTable,
 		auditLogsIndex1,
 		auditLogsIndex2,
@@ -225,6 +249,9 @@ func createTables() {
 		auditLogsIndex5,
 		quotaIndexes1,
 		quotaIndexes2,
+		workspaceMembersIndex1,
+		workspaceMembersIndex2,
+		workspaceMembersIndex3,
 		apiKeyIndexes1,
 		apiKeyIndexes2,
 		apiKeyIndexes3,
