@@ -426,6 +426,24 @@ func createTables() {
 		`CREATE INDEX IF NOT EXISTS idx_idle_exempt_workspaces_org ON idle_exempt_workspaces(organization_id)`,
 		`CREATE INDEX IF NOT EXISTS idx_idle_shutdown_events_workspace ON idle_shutdown_events(workspace_id)`,
 		`CREATE INDEX IF NOT EXISTS idx_idle_shutdown_events_org ON idle_shutdown_events(organization_id)`,
+
+		// Workspace configuration tables
+		`CREATE TABLE IF NOT EXISTS workspace_configurations (
+		workspace_id INTEGER PRIMARY KEY,
+		config_data TEXT NOT NULL,
+		updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+		FOREIGN KEY (workspace_id) REFERENCES workspaces(id) ON DELETE CASCADE
+	);`,
+		`CREATE TABLE IF NOT EXISTS workspace_configurations_history (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		workspace_id INTEGER NOT NULL,
+		version INTEGER NOT NULL,
+		config_data TEXT NOT NULL,
+		archived_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+		FOREIGN KEY (workspace_id) REFERENCES workspaces(id) ON DELETE CASCADE
+	);`,
+		`CREATE INDEX IF NOT EXISTS idx_workspace_config_history_workspace ON workspace_configurations_history(workspace_id)`,
+		`CREATE INDEX IF NOT EXISTS idx_workspace_config_history_version ON workspace_configurations_history(workspace_id, version)`,
 	}
 
 	for _, stmt := range statements {

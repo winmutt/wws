@@ -115,7 +115,7 @@
 
 ### 2.2 Management
 - [ ] 2.2.1 Improve Start/Stop/Restart UI
-- [ ] 2.2.2 Implement workspace configuration persistence
+- [x] 2.2.2 Implement workspace configuration persistence (PR #263)
 - [ ] 2.2.3 Build usage metrics collection
 - [ ] 2.2.4 Create billing tracking system
 - [x] 2.2.5 Implement idle timeout configuration (PR #262)
