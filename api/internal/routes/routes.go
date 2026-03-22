@@ -3,6 +3,7 @@ package routes
 import (
 	"github.com/gorilla/mux"
 
+	"wws/api/internal/analytics"
 	"wws/api/internal/handlers"
 )
 
@@ -86,4 +87,16 @@ func SetupRoutes(r *mux.Router) {
 	compliance.HandleFunc("/score", handlers.ComplianceGetScoreHandler).Methods("POST")
 	compliance.HandleFunc("/reports", handlers.ComplianceListReportsHandler).Methods("GET")
 	compliance.HandleFunc("/status", handlers.ComplianceCheckComplianceStatusHandler).Methods("GET")
+
+	// Analytics routes
+	analyticsRoutes := api.PathPrefix("/analytics").Subrouter()
+	analyticsRoutes.HandleFunc("/usage", handlers.Adapter(analytics.Adapter(analytics.RecordUsageHandler))).Methods("POST")
+	analyticsRoutes.HandleFunc("/usage/workspace", handlers.Adapter(analytics.Adapter(analytics.GetWorkspaceUsageHandler))).Methods("GET")
+	analyticsRoutes.HandleFunc("/usage/organization", handlers.Adapter(analytics.Adapter(analytics.GetOrganizationUsageHandler))).Methods("GET")
+	analyticsRoutes.HandleFunc("/stats/workspace", handlers.Adapter(analytics.Adapter(analytics.GetWorkspaceStatsHandler))).Methods("GET")
+	analyticsRoutes.HandleFunc("/summary", handlers.Adapter(analytics.Adapter(analytics.GetAnalyticsSummaryHandler))).Methods("GET")
+
+	// Usage alerts routes
+	analyticsRoutes.HandleFunc("/alerts", handlers.Adapter(analytics.Adapter(analytics.GetActiveAlertsHandler))).Methods("GET")
+	analyticsRoutes.HandleFunc("/alerts/resolve", handlers.Adapter(analytics.Adapter(analytics.ResolveAlertHandler))).Methods("POST")
 }

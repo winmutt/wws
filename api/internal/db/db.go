@@ -50,11 +50,13 @@ func createTables() {
 		status TEXT NOT NULL,
 		config TEXT,
 		region TEXT,
+		template_id INTEGER,
 		created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 		updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 		deleted_at DATETIME,
 		FOREIGN KEY (organization_id) REFERENCES organizations(id),
-		FOREIGN KEY (owner_id) REFERENCES users(id)
+		FOREIGN KEY (owner_id) REFERENCES users(id),
+		FOREIGN KEY (template_id) REFERENCES workspace_templates(id)
 	);`
 
 	workspaceLanguagesTable := `
@@ -208,6 +210,9 @@ func createTables() {
 	workspaceMembersIndex2 := `CREATE INDEX IF NOT EXISTS idx_workspace_members_user_id ON workspace_members(user_id);`
 	workspaceMembersIndex3 := `CREATE INDEX IF NOT EXISTS idx_workspace_members_status ON workspace_members(status);`
 
+	// Workspace template index
+	workspaceTemplateIndex := `CREATE INDEX IF NOT EXISTS idx_workspaces_template_id ON workspaces(template_id);`
+
 	// API keys table
 	apiKeysTable := `
 	CREATE TABLE IF NOT EXISTS api_keys (
@@ -227,6 +232,99 @@ func createTables() {
 	apiKeyIndexes2 := `CREATE INDEX IF NOT EXISTS idx_api_keys_key_hash ON api_keys(key_hash);`
 	apiKeyIndexes3 := `CREATE INDEX IF NOT EXISTS idx_api_keys_expires_at ON api_keys(expires_at);`
 
+	// Workspace templates tables
+	workspaceTemplatesTable := `
+	CREATE TABLE IF NOT EXISTS workspace_templates (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		name TEXT NOT NULL,
+		description TEXT,
+		organization_id INTEGER,
+		provider TEXT NOT NULL DEFAULT 'podman',
+		bootstrap_script TEXT,
+		is_public INTEGER DEFAULT 0,
+		created_by INTEGER NOT NULL,
+		created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+		updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+		FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE CASCADE,
+		FOREIGN KEY (created_by) REFERENCES users(id)
+	);`
+
+	templateLanguagesTable := `
+	CREATE TABLE IF NOT EXISTS template_languages (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		template_id INTEGER NOT NULL,
+		language TEXT NOT NULL,
+		version TEXT,
+		FOREIGN KEY (template_id) REFERENCES workspace_templates(id) ON DELETE CASCADE
+	);`
+
+	templateEnvVarsTable := `
+	CREATE TABLE IF NOT EXISTS template_env_vars (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		template_id INTEGER NOT NULL,
+		key TEXT NOT NULL,
+		value TEXT,
+		FOREIGN KEY (template_id) REFERENCES workspace_templates(id) ON DELETE CASCADE
+	);`
+
+	templateResourcesTable := `
+	CREATE TABLE IF NOT EXISTS template_resources (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		template_id INTEGER NOT NULL UNIQUE,
+		cpu INTEGER NOT NULL DEFAULT 2,
+		memory_gb REAL NOT NULL DEFAULT 4,
+		storage_gb INTEGER NOT NULL DEFAULT 20,
+		FOREIGN KEY (template_id) REFERENCES workspace_templates(id) ON DELETE CASCADE
+	);`
+
+	// Usage analytics tables
+	workspaceUsageTable := `
+	CREATE TABLE IF NOT EXISTS workspace_usage (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		workspace_id INTEGER NOT NULL,
+		cpu_usage REAL NOT NULL DEFAULT 0,
+		memory_usage REAL NOT NULL DEFAULT 0,
+		storage_used_gb REAL NOT NULL DEFAULT 0,
+		network_in_mb REAL NOT NULL DEFAULT 0,
+		network_out_mb REAL NOT NULL DEFAULT 0,
+		uptime_seconds INTEGER NOT NULL DEFAULT 0,
+		timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+		FOREIGN KEY (workspace_id) REFERENCES workspaces(id) ON DELETE CASCADE
+	);`
+
+	usageAlertsTable := `
+	CREATE TABLE IF NOT EXISTS usage_alerts (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		organization_id INTEGER NOT NULL,
+		workspace_id INTEGER,
+		alert_type TEXT NOT NULL,
+		severity TEXT NOT NULL,
+		message TEXT NOT NULL,
+		value REAL NOT NULL,
+		threshold REAL NOT NULL,
+		resolved INTEGER DEFAULT 0,
+		created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+		resolved_at DATETIME,
+		FOREIGN KEY (organization_id) REFERENCES organizations(id),
+		FOREIGN KEY (workspace_id) REFERENCES workspaces(id) ON DELETE CASCADE
+	);`
+
+	// Indexes for templates
+	templatesIndex1 := `CREATE INDEX IF NOT EXISTS idx_workspace_templates_org_id ON workspace_templates(organization_id);`
+	templatesIndex2 := `CREATE INDEX IF NOT EXISTS idx_workspace_templates_is_public ON workspace_templates(is_public);`
+	templatesIndex3 := `CREATE INDEX IF NOT EXISTS idx_template_languages_template_id ON template_languages(template_id);`
+	templatesIndex4 := `CREATE INDEX IF NOT EXISTS idx_template_env_vars_template_id ON template_env_vars(template_id);`
+
+	// Indexes for usage analytics
+	workspaceUsageIndex1 := `CREATE INDEX IF NOT EXISTS idx_workspace_usage_workspace_id ON workspace_usage(workspace_id);`
+	workspaceUsageIndex2 := `CREATE INDEX IF NOT EXISTS idx_workspace_usage_timestamp ON workspace_usage(timestamp);`
+	workspaceUsageIndex3 := `CREATE INDEX IF NOT EXISTS idx_workspace_usage_workspace_timestamp ON workspace_usage(workspace_id, timestamp);`
+
+	usageAlertsIndex1 := `CREATE INDEX IF NOT EXISTS idx_usage_alerts_org_id ON usage_alerts(organization_id);`
+	usageAlertsIndex2 := `CREATE INDEX IF NOT EXISTS idx_usage_alerts_workspace_id ON usage_alerts(workspace_id);`
+	usageAlertsIndex3 := `CREATE INDEX IF NOT EXISTS idx_usage_alerts_resolved ON usage_alerts(resolved);`
+	usageAlertsIndex4 := `CREATE INDEX IF NOT EXISTS idx_usage_alerts_created_at ON usage_alerts(created_at);`
+
 	statements := []string{
 		usersTable,
 		organizationsTable,
@@ -242,6 +340,12 @@ func createTables() {
 		quotaUsageTable,
 		workspaceMembersTable,
 		apiKeysTable,
+		workspaceTemplatesTable,
+		templateLanguagesTable,
+		templateEnvVarsTable,
+		templateResourcesTable,
+		workspaceUsageTable,
+		usageAlertsTable,
 		auditLogsIndex1,
 		auditLogsIndex2,
 		auditLogsIndex3,
@@ -252,9 +356,21 @@ func createTables() {
 		workspaceMembersIndex1,
 		workspaceMembersIndex2,
 		workspaceMembersIndex3,
+		workspaceTemplateIndex,
 		apiKeyIndexes1,
 		apiKeyIndexes2,
 		apiKeyIndexes3,
+		templatesIndex1,
+		templatesIndex2,
+		templatesIndex3,
+		templatesIndex4,
+		workspaceUsageIndex1,
+		workspaceUsageIndex2,
+		workspaceUsageIndex3,
+		usageAlertsIndex1,
+		usageAlertsIndex2,
+		usageAlertsIndex3,
+		usageAlertsIndex4,
 	}
 
 	for _, stmt := range statements {
