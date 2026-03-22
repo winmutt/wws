@@ -118,8 +118,8 @@
 - [ ] 2.2.2 Implement workspace configuration persistence
 - [ ] 2.2.3 Build usage metrics collection
 - [ ] 2.2.4 Create billing tracking system
-- [ ] 2.2.5 Implement idle timeout configuration
-- [ ] 2.2.6 Build auto-shutdown logic for idle workspaces
+- [x] 2.2.5 Implement idle timeout configuration (PR #262)
+- [x] 2.2.6 Build auto-shutdown logic for idle workspaces (PR #262)
 - [ ] 2.2.7 Create resource usage alerts
 - [ ] 2.2.8 Implement workspace scaling
 - [ ] 2.2.9 Build workspace history

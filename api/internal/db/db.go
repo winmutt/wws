@@ -309,6 +309,52 @@ func createTables() {
 		FOREIGN KEY (workspace_id) REFERENCES workspaces(id) ON DELETE CASCADE
 	);`
 
+	// Idle management tables
+	idleConfigTable := `
+	CREATE TABLE IF NOT EXISTS idle_config (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		organization_id INTEGER NOT NULL UNIQUE,
+		idle_timeout_hours INTEGER NOT NULL DEFAULT 6,
+		warning_threshold_hours INTEGER NOT NULL DEFAULT 5,
+		auto_shutdown_enabled INTEGER DEFAULT 1,
+		shutdown_grace_period INTEGER NOT NULL DEFAULT 15,
+		updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+		FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE CASCADE
+	);`
+
+	idleExemptUsersTable := `
+	CREATE TABLE IF NOT EXISTS idle_exempt_users (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		organization_id INTEGER NOT NULL,
+		user_id INTEGER NOT NULL,
+		created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+		FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE CASCADE,
+		FOREIGN KEY (user_id) REFERENCES users(id)
+	);`
+
+	idleExemptWorkspacesTable := `
+	CREATE TABLE IF NOT EXISTS idle_exempt_workspaces (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		organization_id INTEGER NOT NULL,
+		workspace_id INTEGER NOT NULL,
+		created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+		FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE CASCADE,
+		FOREIGN KEY (workspace_id) REFERENCES workspaces(id) ON DELETE CASCADE
+	);`
+
+	idleShutdownEventsTable := `
+	CREATE TABLE IF NOT EXISTS idle_shutdown_events (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		workspace_id INTEGER NOT NULL,
+		organization_id INTEGER NOT NULL,
+		idle_duration_minutes INTEGER NOT NULL DEFAULT 0,
+		shutdown_at DATETIME NOT NULL,
+		triggered_by TEXT NOT NULL,
+		reason TEXT,
+		FOREIGN KEY (workspace_id) REFERENCES workspaces(id),
+		FOREIGN KEY (organization_id) REFERENCES organizations(id)
+	);`
+
 	// Indexes for templates
 	templatesIndex1 := `CREATE INDEX IF NOT EXISTS idx_workspace_templates_org_id ON workspace_templates(organization_id);`
 	templatesIndex2 := `CREATE INDEX IF NOT EXISTS idx_workspace_templates_is_public ON workspace_templates(is_public);`
@@ -346,6 +392,10 @@ func createTables() {
 		templateResourcesTable,
 		workspaceUsageTable,
 		usageAlertsTable,
+		idleConfigTable,
+		idleExemptUsersTable,
+		idleExemptWorkspacesTable,
+		idleShutdownEventsTable,
 		auditLogsIndex1,
 		auditLogsIndex2,
 		auditLogsIndex3,
@@ -371,6 +421,11 @@ func createTables() {
 		usageAlertsIndex2,
 		usageAlertsIndex3,
 		usageAlertsIndex4,
+		// Indexes for idle management
+		`CREATE INDEX IF NOT EXISTS idx_idle_exempt_users_org ON idle_exempt_users(organization_id)`,
+		`CREATE INDEX IF NOT EXISTS idx_idle_exempt_workspaces_org ON idle_exempt_workspaces(organization_id)`,
+		`CREATE INDEX IF NOT EXISTS idx_idle_shutdown_events_workspace ON idle_shutdown_events(workspace_id)`,
+		`CREATE INDEX IF NOT EXISTS idx_idle_shutdown_events_org ON idle_shutdown_events(organization_id)`,
 	}
 
 	for _, stmt := range statements {
