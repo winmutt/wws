@@ -105,8 +105,8 @@
 - [x] 2.1.1 Implement shared workspace access (PR #260)
 - [ ] 2.1.2 Create team-based permissions system
 - [ ] 2.1.3 Build resource monitoring dashboard
-- [x] 2.1.4 Create workspace templates system (PR #XXX)
-- [x] 2.1.5 Implement usage analytics tracking (PR #XXX)
+- [x] 2.1.4 Create workspace templates system (PR #261)
+- [x] 2.1.5 Implement usage analytics tracking (PR #261)
 - [ ] 2.1.6 Build backup/restore functionality
 - [ ] 2.1.7 Implement tmux session sharing
 - [ ] 2.1.8 Create shared terminal functionality
