@@ -99,4 +99,5 @@ func SetupRoutes(r *mux.Router) {
 	// Usage alerts routes
 	analyticsRoutes.HandleFunc("/alerts", handlers.Adapter(analytics.Adapter(analytics.GetActiveAlertsHandler))).Methods("GET")
 	analyticsRoutes.HandleFunc("/alerts/resolve", handlers.Adapter(analytics.Adapter(analytics.ResolveAlertHandler))).Methods("POST")
+
 }

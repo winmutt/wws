@@ -187,18 +187,25 @@ func GetWorkspaceStats(ctx context.Context, workspaceID int) (*WorkspaceStats, e
 	stats.WorkspaceName = workspaceName
 	stats.CreatedAt = createdAt
 
-	var lastActive sql.NullTime
+	var lastActiveStr sql.NullString
 	err = db.DB.QueryRowContext(ctx, query, workspaceID).Scan(
 		&stats.AverageCPU, &stats.AverageMemory, &stats.AverageStorage,
-		&stats.TotalNetworkMB, &stats.UptimeSeconds, &lastActive,
+		&stats.TotalNetworkMB, &stats.UptimeSeconds, &lastActiveStr,
 	)
 
 	if err != nil && err != sql.ErrNoRows {
 		return nil, fmt.Errorf("failed to query workspace stats: %w", err)
 	}
 
-	if lastActive.Valid {
-		stats.LastActiveAt = lastActive.Time
+	if lastActiveStr.Valid && lastActiveStr.String != "" {
+		// Try to parse as time, fallback to created_at
+		if t, err := time.Parse("2006-01-02 15:04:05", lastActiveStr.String); err == nil {
+			stats.LastActiveAt = t
+		} else if t, err := time.Parse(time.RFC3339, lastActiveStr.String); err == nil {
+			stats.LastActiveAt = t
+		} else {
+			stats.LastActiveAt = stats.CreatedAt
+		}
 	} else {
 		stats.LastActiveAt = stats.CreatedAt
 	}
