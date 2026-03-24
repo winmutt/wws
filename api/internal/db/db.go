@@ -473,6 +473,124 @@ func createTables() {
 		`CREATE INDEX IF NOT EXISTS idx_tmux_sessions_owner ON tmux_sessions(owner_id)`,
 		`CREATE INDEX IF NOT EXISTS idx_tmux_shares_session ON tmux_shares(session_id)`,
 		`CREATE INDEX IF NOT EXISTS idx_tmux_shares_user ON tmux_shares(user_id)`,
+
+		// Team and permissions tables
+		`CREATE TABLE IF NOT EXISTS teams (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		organization_id INTEGER NOT NULL,
+		name TEXT NOT NULL,
+		description TEXT,
+		created_by INTEGER NOT NULL,
+		created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+		updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+		FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE CASCADE,
+		FOREIGN KEY (created_by) REFERENCES users(id)
+	);`,
+		`CREATE TABLE IF NOT EXISTS team_roles (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		name TEXT NOT NULL,
+		description TEXT,
+		permissions TEXT NOT NULL DEFAULT '[]',
+		is_default INTEGER DEFAULT 0,
+		created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+		updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+	);`,
+		`CREATE TABLE IF NOT EXISTS team_members (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		team_id INTEGER NOT NULL,
+		user_id INTEGER NOT NULL,
+		role_id INTEGER NOT NULL,
+		joined_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+		status TEXT NOT NULL DEFAULT 'active',
+		FOREIGN KEY (team_id) REFERENCES teams(id) ON DELETE CASCADE,
+		FOREIGN KEY (user_id) REFERENCES users(id),
+		FOREIGN KEY (role_id) REFERENCES team_roles(id)
+	);`,
+		`CREATE TABLE IF NOT EXISTS team_workspace_access (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		team_id INTEGER NOT NULL,
+		workspace_id INTEGER NOT NULL,
+		access_level TEXT NOT NULL,
+		granted_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+		granted_by INTEGER NOT NULL,
+		FOREIGN KEY (team_id) REFERENCES teams(id) ON DELETE CASCADE,
+		FOREIGN KEY (workspace_id) REFERENCES workspaces(id) ON DELETE CASCADE,
+		FOREIGN KEY (granted_by) REFERENCES users(id)
+	);`,
+
+		// Workspace backup tables
+		`CREATE TABLE IF NOT EXISTS workspace_backups (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		workspace_id INTEGER NOT NULL,
+		backup_path TEXT NOT NULL,
+		backup_size_gb REAL,
+		status TEXT NOT NULL,
+		created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+		FOREIGN KEY (workspace_id) REFERENCES workspaces(id) ON DELETE CASCADE
+	);`,
+
+		// Workspace history table
+		`CREATE TABLE IF NOT EXISTS workspace_history (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		workspace_id INTEGER NOT NULL,
+		action TEXT NOT NULL,
+		previous_state TEXT,
+		new_state TEXT,
+		performed_by INTEGER,
+		created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+		FOREIGN KEY (workspace_id) REFERENCES workspaces(id),
+		FOREIGN KEY (performed_by) REFERENCES users(id)
+	);`,
+
+		// Billing tracking tables
+		`CREATE TABLE IF NOT EXISTS billing_records (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		organization_id INTEGER NOT NULL,
+		workspace_id INTEGER,
+		billing_type TEXT NOT NULL,
+		amount REAL NOT NULL,
+		currency TEXT DEFAULT 'USD',
+		description TEXT,
+		period_start DATETIME,
+		period_end DATETIME,
+		created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+		FOREIGN KEY (organization_id) REFERENCES organizations(id),
+		FOREIGN KEY (workspace_id) REFERENCES workspaces(id)
+	);`,
+
+		// Resource alerts table
+		`CREATE TABLE IF NOT EXISTS resource_alerts (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		organization_id INTEGER NOT NULL,
+		workspace_id INTEGER,
+		alert_type TEXT NOT NULL,
+		severity TEXT NOT NULL,
+		message TEXT NOT NULL,
+		value REAL,
+		threshold REAL,
+		acknowledged INTEGER DEFAULT 0,
+		created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+		acknowledged_at DATETIME,
+		FOREIGN KEY (organization_id) REFERENCES organizations(id),
+		FOREIGN KEY (workspace_id) REFERENCES workspaces(id)
+	);`,
+
+		// Indexes for teams
+		`CREATE INDEX IF NOT EXISTS idx_teams_org ON teams(organization_id)`,
+		`CREATE INDEX IF NOT EXISTS idx_team_members_team ON team_members(team_id)`,
+		`CREATE INDEX IF NOT EXISTS idx_team_members_user ON team_members(user_id)`,
+		`CREATE INDEX IF NOT EXISTS idx_team_workspace_team ON team_workspace_access(team_id)`,
+		`CREATE INDEX IF NOT EXISTS idx_team_workspace_workspace ON team_workspace_access(workspace_id)`,
+
+		// Indexes for backups and history
+		`CREATE INDEX IF NOT EXISTS idx_workspace_backups_workspace ON workspace_backups(workspace_id)`,
+		`CREATE INDEX IF NOT EXISTS idx_workspace_history_workspace ON workspace_history(workspace_id)`,
+
+		// Indexes for billing and alerts
+		`CREATE INDEX IF NOT EXISTS idx_billing_records_org ON billing_records(organization_id)`,
+		`CREATE INDEX IF NOT EXISTS idx_billing_records_workspace ON billing_records(workspace_id)`,
+		`CREATE INDEX IF NOT EXISTS idx_resource_alerts_org ON resource_alerts(organization_id)`,
+		`CREATE INDEX IF NOT EXISTS idx_resource_alerts_workspace ON resource_alerts(workspace_id)`,
 	}
 
 	for _, stmt := range statements {
