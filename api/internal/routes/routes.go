@@ -100,4 +100,15 @@ func SetupRoutes(r *mux.Router) {
 	analyticsRoutes.HandleFunc("/alerts", handlers.Adapter(analytics.Adapter(analytics.GetActiveAlertsHandler))).Methods("GET")
 	analyticsRoutes.HandleFunc("/alerts/resolve", handlers.Adapter(analytics.Adapter(analytics.ResolveAlertHandler))).Methods("POST")
 
+	// Tmux session routes
+	tmuxRoutes := api.PathPrefix("/tmux").Subrouter()
+	tmuxHandler := &handlers.TmuxHandler{}
+	tmuxRoutes.HandleFunc("", tmuxHandler.CreateTmuxSession).Methods("POST")
+	tmuxRoutes.HandleFunc("", tmuxHandler.GetTmuxSessions).Methods("GET")
+	tmuxRoutes.HandleFunc("/share", tmuxHandler.ShareTmuxSession).Methods("POST")
+	tmuxRoutes.HandleFunc("/shares", tmuxHandler.GetTmuxSessionShares).Methods("GET")
+	tmuxRoutes.HandleFunc("/shares/revoke", tmuxHandler.RevokeTmuxShare).Methods("DELETE")
+	tmuxRoutes.HandleFunc("", tmuxHandler.DeleteTmuxSession).Methods("DELETE")
+	tmuxRoutes.HandleFunc("/access/check", tmuxHandler.CheckTmuxAccess).Methods("GET")
+
 }

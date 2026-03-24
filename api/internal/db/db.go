@@ -444,6 +444,35 @@ func createTables() {
 	);`,
 		`CREATE INDEX IF NOT EXISTS idx_workspace_config_history_workspace ON workspace_configurations_history(workspace_id)`,
 		`CREATE INDEX IF NOT EXISTS idx_workspace_config_history_version ON workspace_configurations_history(workspace_id, version)`,
+
+		// Tmux session sharing tables
+		`CREATE TABLE IF NOT EXISTS tmux_sessions (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		workspace_id INTEGER NOT NULL,
+		session_name TEXT NOT NULL,
+		owner_id INTEGER NOT NULL,
+		is_active INTEGER DEFAULT 1,
+		created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+		expires_at DATETIME,
+		FOREIGN KEY (workspace_id) REFERENCES workspaces(id) ON DELETE CASCADE,
+		FOREIGN KEY (owner_id) REFERENCES users(id)
+	);`,
+		`CREATE TABLE IF NOT EXISTS tmux_shares (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		session_id INTEGER NOT NULL,
+		user_id INTEGER NOT NULL,
+		permission TEXT NOT NULL,
+		granted_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+		granted_by INTEGER NOT NULL,
+		expires_at DATETIME,
+		FOREIGN KEY (session_id) REFERENCES tmux_sessions(id) ON DELETE CASCADE,
+		FOREIGN KEY (user_id) REFERENCES users(id),
+		FOREIGN KEY (granted_by) REFERENCES users(id)
+	);`,
+		`CREATE INDEX IF NOT EXISTS idx_tmux_sessions_workspace ON tmux_sessions(workspace_id)`,
+		`CREATE INDEX IF NOT EXISTS idx_tmux_sessions_owner ON tmux_sessions(owner_id)`,
+		`CREATE INDEX IF NOT EXISTS idx_tmux_shares_session ON tmux_shares(session_id)`,
+		`CREATE INDEX IF NOT EXISTS idx_tmux_shares_user ON tmux_shares(user_id)`,
 	}
 
 	for _, stmt := range statements {
