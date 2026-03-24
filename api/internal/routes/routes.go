@@ -100,4 +100,30 @@ func SetupRoutes(r *mux.Router) {
 	analyticsRoutes.HandleFunc("/alerts", handlers.Adapter(analytics.Adapter(analytics.GetActiveAlertsHandler))).Methods("GET")
 	analyticsRoutes.HandleFunc("/alerts/resolve", handlers.Adapter(analytics.Adapter(analytics.ResolveAlertHandler))).Methods("POST")
 
+	// Team routes
+	teams := api.PathPrefix("/teams").Subrouter()
+	teamHandler := &handlers.TeamHandler{}
+	teams.HandleFunc("", teamHandler.CreateTeam).Methods("POST")
+	teams.HandleFunc("", teamHandler.ListTeams).Methods("GET")
+	teams.HandleFunc("/get", teamHandler.GetTeam).Methods("GET")
+	teams.HandleFunc("/members", teamHandler.GetTeamMembers).Methods("GET")
+	teams.HandleFunc("/my-teams", teamHandler.GetUserTeams).Methods("GET")
+	teams.HandleFunc("/members/add", teamHandler.AddTeamMember).Methods("POST")
+	teams.HandleFunc("/members/remove", teamHandler.RemoveTeamMember).Methods("DELETE")
+
+	// Role routes
+	roleHandler := &handlers.RoleHandler{}
+	teams.HandleFunc("/roles", roleHandler.CreateRole).Methods("POST")
+	teams.HandleFunc("/roles", roleHandler.ListRoles).Methods("GET")
+
+	// Permission routes
+	permHandler := &handlers.PermissionHandler{}
+	teams.HandleFunc("/permissions/check", permHandler.CheckPermission).Methods("POST")
+
+	// Workspace access routes
+	accessHandler := &handlers.WorkspaceAccessHandler{}
+	teams.HandleFunc("/workspace-access/grant", accessHandler.GrantWorkspaceAccess).Methods("POST")
+	teams.HandleFunc("/workspace-access", accessHandler.GetTeamWorkspaceAccess).Methods("GET")
+	teams.HandleFunc("/workspace-access/check", accessHandler.HasWorkspaceAccess).Methods("GET")
+
 }
