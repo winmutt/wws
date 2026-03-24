@@ -137,4 +137,15 @@ func SetupRoutes(r *mux.Router) {
 	teams.HandleFunc("/workspace-access", accessHandler.GetTeamWorkspaceAccess).Methods("GET")
 	teams.HandleFunc("/workspace-access/check", accessHandler.HasWorkspaceAccess).Methods("GET")
 
+	// Terminal routes
+	terminalRoutes := api.PathPrefix("/terminal").Subrouter()
+	terminalHandler := &handlers.TerminalHandler{}
+	terminalRoutes.HandleFunc("", terminalHandler.CreateTerminalSession).Methods("POST")
+	terminalRoutes.HandleFunc("", terminalHandler.GetTerminalSessions).Methods("GET")
+	terminalRoutes.HandleFunc("/participants", terminalHandler.GetSessionParticipants).Methods("GET")
+	terminalRoutes.HandleFunc("/join", terminalHandler.JoinTerminalSession).Methods("GET")
+	terminalRoutes.HandleFunc("/input", terminalHandler.BroadcastInput).Methods("POST")
+	terminalRoutes.HandleFunc("/output", terminalHandler.BroadcastOutput).Methods("POST")
+	terminalRoutes.HandleFunc("/cursor", terminalHandler.BroadcastCursor).Methods("POST")
+
 }
