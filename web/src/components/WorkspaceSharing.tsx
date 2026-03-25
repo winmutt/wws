@@ -282,6 +282,3 @@ const WorkspaceSharing: React.FC<WorkspaceSharingProps> = ({ workspaceId, worksp
 
 export default WorkspaceSharing;
 
-</content>
-<parameter=filePath>
-/home/winmutt/git/winmutt/wws/web/src/components/WorkspaceSharing.tsx
