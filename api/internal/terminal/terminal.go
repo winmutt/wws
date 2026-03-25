@@ -10,8 +10,8 @@ import (
 	"sync"
 	"time"
 
-	"wws/api/internal/db"
 	"github.com/gorilla/websocket"
+	"wws/api/internal/db"
 )
 
 var upgrader = websocket.Upgrader{
@@ -24,23 +24,23 @@ var upgrader = websocket.Upgrader{
 
 // TerminalSession represents a shared terminal session
 type TerminalSession struct {
-	ID          int          `db:"id" json:"id"`
-	WorkspaceID int          `db:"workspace_id" json:"workspace_id"`
-	SessionType string       `db:"session_type" json:"session_type"` // "tmux", "direct"
-	IsActive    bool         `db:"is_active" json:"is_active"`
-	CreatedAt   time.Time    `db:"created_at" json:"created_at"`
-	UpdatedAt   time.Time    `db:"updated_at" json:"updated_at"`
+	ID          int       `db:"id" json:"id"`
+	WorkspaceID int       `db:"workspace_id" json:"workspace_id"`
+	SessionType string    `db:"session_type" json:"session_type"` // "tmux", "direct"
+	IsActive    bool      `db:"is_active" json:"is_active"`
+	CreatedAt   time.Time `db:"created_at" json:"created_at"`
+	UpdatedAt   time.Time `db:"updated_at" json:"updated_at"`
 }
 
 // TerminalParticipant represents a user participating in a terminal session
 type TerminalParticipant struct {
-	ID         int          `db:"id" json:"id"`
-	SessionID  int          `db:"session_id" json:"session_id"`
-	UserID     int          `db:"user_id" json:"user_id"`
-	Username   string       `db:"username" json:"username"`
-	Permission string       `db:"permission" json:"permission"` // "viewer" or "editor"
-	Connected  bool         `db:"connected" json:"connected"`
-	ConnectedAt sql.NullTime `db:"connected_at" json:"connected_at"`
+	ID             int          `db:"id" json:"id"`
+	SessionID      int          `db:"session_id" json:"session_id"`
+	UserID         int          `db:"user_id" json:"user_id"`
+	Username       string       `db:"username" json:"username"`
+	Permission     string       `db:"permission" json:"permission"` // "viewer" or "editor"
+	Connected      bool         `db:"connected" json:"connected"`
+	ConnectedAt    sql.NullTime `db:"connected_at" json:"connected_at"`
 	DisconnectedAt sql.NullTime `db:"disconnected_at" json:"disconnected_at"`
 }
 
@@ -56,14 +56,14 @@ type TerminalMessage struct {
 
 // Client represents a WebSocket client connected to a terminal session
 type Client struct {
-	ID        int
-	SessionID int
-	UserID    int
-	Username  string
+	ID         int
+	SessionID  int
+	UserID     int
+	Username   string
 	Permission string
-	Conn      *websocket.Conn
-	Send      chan []byte
-	Hub       *TerminalHub
+	Conn       *websocket.Conn
+	Send       chan []byte
+	Hub        *TerminalHub
 }
 
 // TerminalHub manages WebSocket connections for terminal sessions
@@ -201,11 +201,11 @@ func CreateTerminalSession(ctx context.Context, workspaceID int, sessionType str
 // AddParticipant adds a user to a terminal session
 func AddParticipant(ctx context.Context, sessionID, userID int, username, permission string) (*TerminalParticipant, error) {
 	participant := &TerminalParticipant{
-		SessionID:  sessionID,
-		UserID:     userID,
-		Username:   username,
-		Permission: permission,
-		Connected:  true,
+		SessionID:   sessionID,
+		UserID:      userID,
+		Username:    username,
+		Permission:  permission,
+		Connected:   true,
 		ConnectedAt: sql.NullTime{Time: time.Now(), Valid: true},
 	}
 
@@ -272,14 +272,14 @@ func HandleWebSocket(w http.ResponseWriter, r *http.Request, sessionID, userID i
 	}
 
 	client := &Client{
-		ID:        userID,
-		SessionID: sessionID,
-		UserID:    userID,
-		Username:  username,
+		ID:         userID,
+		SessionID:  sessionID,
+		UserID:     userID,
+		Username:   username,
 		Permission: permission,
-		Conn:      conn,
-		Send:      make(chan []byte, 256),
-		Hub:       hub,
+		Conn:       conn,
+		Send:       make(chan []byte, 256),
+		Hub:        hub,
 	}
 
 	hub.register <- client
@@ -346,6 +346,7 @@ func BroadcastInput(sessionID, userID int, data string) {
 	msgData, _ := json.Marshal(msg)
 	hub.broadcast <- msgData
 }
+
 // BroadcastOutput broadcasts terminal output to all participants
 func BroadcastOutput(sessionID int, data string) {
 	msg := TerminalMessage{
@@ -357,6 +358,7 @@ func BroadcastOutput(sessionID int, data string) {
 	msgData, _ := json.Marshal(msg)
 	hub.broadcast <- msgData
 }
+
 // BroadcastCursor broadcasts cursor position updates
 func BroadcastCursor(sessionID, userID int, x, y int) {
 	msg := TerminalMessage{

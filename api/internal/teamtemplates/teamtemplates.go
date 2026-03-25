@@ -11,21 +11,21 @@ import (
 
 // TeamTemplateAccess represents team access to a workspace template
 type TeamTemplateAccess struct {
-	ID         int          `db:"id" json:"id"`
-	TeamID     int          `db:"team_id" json:"team_id"`
-	TemplateID int          `db:"template_id" json:"template_id"`
-	Permission string       `db:"permission" json:"permission"` // "view" or "use"
-	GrantedBy  int          `db:"granted_by" json:"granted_by"`
-	GrantedAt  time.Time    `db:"granted_at" json:"granted_at"`
+	ID         int           `db:"id" json:"id"`
+	TeamID     int           `db:"team_id" json:"team_id"`
+	TemplateID int           `db:"template_id" json:"template_id"`
+	Permission string        `db:"permission" json:"permission"` // "view" or "use"
+	GrantedBy  int           `db:"granted_by" json:"granted_by"`
+	GrantedAt  time.Time     `db:"granted_at" json:"granted_at"`
 	Template   *TemplateInfo `db:"-" json:"template,omitempty"`
 }
 
 // TemplateInfo contains basic template information
 type TemplateInfo struct {
-	ID          int     `json:"id"`
-	Name        string  `json:"name"`
-	Description string  `json:"description"`
-	IsPublic    bool    `json:"is_public"`
+	ID          int    `json:"id"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	IsPublic    bool   `json:"is_public"`
 }
 
 // GrantTemplateAccess grants a team access to a workspace template
