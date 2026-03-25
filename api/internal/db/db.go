@@ -591,6 +591,32 @@ func createTables() {
 		`CREATE INDEX IF NOT EXISTS idx_billing_records_workspace ON billing_records(workspace_id)`,
 		`CREATE INDEX IF NOT EXISTS idx_resource_alerts_org ON resource_alerts(organization_id)`,
 		`CREATE INDEX IF NOT EXISTS idx_resource_alerts_workspace ON resource_alerts(workspace_id)`,
+
+		// Terminal sharing tables
+		`CREATE TABLE IF NOT EXISTS terminal_sessions (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		workspace_id INTEGER NOT NULL,
+		session_type TEXT NOT NULL DEFAULT 'tmux',
+		is_active INTEGER DEFAULT 1,
+		created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+		updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+		FOREIGN KEY (workspace_id) REFERENCES workspaces(id) ON DELETE CASCADE
+	);`,
+		`CREATE TABLE IF NOT EXISTS terminal_participants (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		session_id INTEGER NOT NULL,
+		user_id INTEGER NOT NULL,
+		username TEXT NOT NULL,
+		permission TEXT NOT NULL DEFAULT 'viewer',
+		connected INTEGER DEFAULT 1,
+		connected_at DATETIME,
+		disconnected_at DATETIME,
+		FOREIGN KEY (session_id) REFERENCES terminal_sessions(id) ON DELETE CASCADE,
+		FOREIGN KEY (user_id) REFERENCES users(id)
+	);`,
+		`CREATE INDEX IF NOT EXISTS idx_terminal_sessions_workspace ON terminal_sessions(workspace_id)`,
+		`CREATE INDEX IF NOT EXISTS idx_terminal_participants_session ON terminal_participants(session_id)`,
+		`CREATE INDEX IF NOT EXISTS idx_terminal_participants_user ON terminal_participants(user_id)`,
 	}
 
 	for _, stmt := range statements {

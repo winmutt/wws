@@ -300,3 +300,11 @@ func getUserIDFromRequest(r *http.Request) int {
 	}
 	return 0
 }
+
+// getUsernameFromRequest extracts username from request context
+func getUsernameFromRequest(r *http.Request) string {
+	if username, ok := r.Context().Value("username").(string); ok {
+		return username
+	}
+	return ""
+}
