@@ -582,6 +582,21 @@ func createTables() {
 		`CREATE INDEX IF NOT EXISTS idx_team_workspace_team ON team_workspace_access(team_id)`,
 		`CREATE INDEX IF NOT EXISTS idx_team_workspace_workspace ON team_workspace_access(workspace_id)`,
 
+		// Team template access table
+		`CREATE TABLE IF NOT EXISTS team_template_access (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		team_id INTEGER NOT NULL,
+		template_id INTEGER NOT NULL,
+		permission TEXT NOT NULL DEFAULT 'view',
+		granted_by INTEGER NOT NULL,
+		granted_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+		FOREIGN KEY (team_id) REFERENCES teams(id) ON DELETE CASCADE,
+		FOREIGN KEY (template_id) REFERENCES workspace_templates(id) ON DELETE CASCADE,
+		FOREIGN KEY (granted_by) REFERENCES users(id)
+	);`,
+		`CREATE INDEX IF NOT EXISTS idx_team_template_team ON team_template_access(team_id)`,
+		`CREATE INDEX IF NOT EXISTS idx_team_template_template ON team_template_access(template_id)`,
+
 		// Indexes for backups and history
 		`CREATE INDEX IF NOT EXISTS idx_workspace_backups_workspace ON workspace_backups(workspace_id)`,
 		`CREATE INDEX IF NOT EXISTS idx_workspace_history_workspace ON workspace_history(workspace_id)`,
