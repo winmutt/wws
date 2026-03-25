@@ -148,4 +148,14 @@ func SetupRoutes(r *mux.Router) {
 	terminalRoutes.HandleFunc("/output", terminalHandler.BroadcastOutput).Methods("POST")
 	terminalRoutes.HandleFunc("/cursor", terminalHandler.BroadcastCursor).Methods("POST")
 
+	// Team template routes
+	teamTemplateRoutes := api.PathPrefix("/teams").Subrouter()
+	teamTemplateHandler := &handlers.TeamTemplateHandler{}
+	teamTemplateRoutes.HandleFunc("/templates/grant", teamTemplateHandler.GrantTemplateAccess).Methods("POST")
+	teamTemplateRoutes.HandleFunc("/templates", teamTemplateHandler.GetTeamTemplates).Methods("GET")
+	teamTemplateRoutes.HandleFunc("/templates/teams", teamTemplateHandler.GetTemplateTeams).Methods("GET")
+	teamTemplateRoutes.HandleFunc("/templates/revoke", teamTemplateHandler.RevokeTemplateAccess).Methods("DELETE")
+	teamTemplateRoutes.HandleFunc("/templates/permission", teamTemplateHandler.CheckTemplatePermission).Methods("POST")
+	teamTemplateRoutes.HandleFunc("/templates/usable", teamTemplateHandler.GetUsableTemplates).Methods("GET")
+
 }
