@@ -52,6 +52,39 @@ interface Invitation {
   expires_at: string;
 }
 
+interface WorkspaceExport {
+  id: number;
+  workspace_id: number;
+  export_path: string;
+  format: string;
+  file_size_mb?: number;
+  status: string;
+  created_at: string;
+  expires_at: string;
+}
+
+interface WorkspaceImport {
+  id: number;
+  export_id?: number;
+  status: string;
+  imported_workspace_id?: number;
+  error?: string;
+  created_at: string;
+}
+
+interface ExportRequest {
+  format?: 'json' | 'tar' | 'zip';
+  include_data?: boolean;
+}
+
+interface ImportRequest {
+  export_id?: number;
+  export_path?: string;
+  format?: string;
+  name?: string;
+  organization_id: number;
+}
+
 const auth = {
   async login(githubCode: string): Promise<{ redirect: string }> {
     const response = await fetch(`${API_BASE}/auth/github/callback?code=${githubCode}`, {
@@ -327,7 +360,109 @@ const workspaces = {
       throw new Error('Failed to restart workspace');
     }
   },
+
+  // Export/Import operations
+  async exportWorkspace(workspaceId: number, options?: ExportRequest): Promise<WorkspaceExport> {
+    const response = await fetch(`${API_BASE}/workspaces/export?workspace_id=${workspaceId}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(options || {}),
+      credentials: 'include',
+    });
+    
+    if (!response.ok) {
+      throw new Error('Failed to export workspace');
+    }
+    
+    return response.json();
+  },
+
+  async importWorkspace(data: ImportRequest): Promise<WorkspaceImport> {
+    const response = await fetch(`${API_BASE}/workspaces/import`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+      credentials: 'include',
+    });
+    
+    if (!response.ok) {
+      throw new Error('Failed to import workspace');
+    }
+    
+    return response.json();
+  },
+
+  async getExportStatus(exportId: number): Promise<WorkspaceExport> {
+    const response = await fetch(`${API_BASE}/workspaces/export/status?id=${exportId}`, {
+      credentials: 'include',
+    });
+    
+    if (!response.ok) {
+      throw new Error('Failed to get export status');
+    }
+    
+    return response.json();
+  },
+
+  async getImportStatus(importId: number): Promise<WorkspaceImport> {
+    const response = await fetch(`${API_BASE}/workspaces/import/status?id=${importId}`, {
+      credentials: 'include',
+    });
+    
+    if (!response.ok) {
+      throw new Error('Failed to get import status');
+    }
+    
+    return response.json();
+  },
+
+  async listExports(): Promise<WorkspaceExport[]> {
+    const response = await fetch(`${API_BASE}/workspaces/exports`, {
+      credentials: 'include',
+    });
+    
+    if (!response.ok) {
+      throw new Error('Failed to list exports');
+    }
+    
+    return response.json();
+  },
+
+  async listImports(orgId: number): Promise<WorkspaceImport[]> {
+    const response = await fetch(`${API_BASE}/workspaces/imports?organization_id=${orgId}`, {
+      credentials: 'include',
+    });
+    
+    if (!response.ok) {
+      throw new Error('Failed to list imports');
+    }
+    
+    return response.json();
+  },
+
+  async downloadExport(exportId: number): Promise<Blob> {
+    const response = await fetch(`${API_BASE}/workspaces/export/download?id=${exportId}`, {
+      credentials: 'include',
+    });
+    
+    if (!response.ok) {
+      throw new Error('Failed to download export');
+    }
+    
+    return response.blob();
+  },
+
+  async deleteExport(exportId: number): Promise<void> {
+    const response = await fetch(`${API_BASE}/workspaces/export?id=${exportId}`, {
+      method: 'DELETE',
+      credentials: 'include',
+    });
+    
+    if (!response.ok) {
+      throw new Error('Failed to delete export');
+    }
+  },
 };
 
 export { auth, users, organizations, invitations, workspaces };
-export type { Session, User, Organization, Workspace, Member, Invitation };
+export type { Session, User, Organization, Workspace, Member, Invitation, WorkspaceExport, WorkspaceImport, ExportRequest, ImportRequest };

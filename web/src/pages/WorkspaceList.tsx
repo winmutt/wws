@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { workspaces, organizations } from '../services/api';
 import WorkspaceCard from '../components/WorkspaceCard';
 import CreateWorkspaceForm from '../components/CreateWorkspaceForm';
+import { WorkspaceImportModal } from '../components/WorkspaceExportModal';
 
 interface Workspace {
   id: number;
@@ -31,6 +32,7 @@ function WorkspaceList() {
   const [orgs, setOrgs] = useState<Organization[]>([]);
   const [selectedOrg, setSelectedOrg] = useState<number | null>(null);
   const [showCreateForm, setShowCreateForm] = useState(false);
+  const [showImportModal, setShowImportModal] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -85,6 +87,11 @@ function WorkspaceList() {
     loadData();
   };
 
+  const handleImportComplete = () => {
+    setShowImportModal(false);
+    loadData();
+  };
+
   if (!isAuthenticated) {
     return null;
   }
@@ -119,6 +126,13 @@ function WorkspaceList() {
             className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 disabled:opacity-50"
           >
             Create Workspace
+          </button>
+          <button
+            onClick={() => setShowImportModal(true)}
+            disabled={!selectedOrg || isLoading}
+            className="bg-purple-600 text-white px-4 py-2 rounded-md hover:bg-purple-700 disabled:opacity-50"
+          >
+            Import Workspace
           </button>
           <button
             onClick={handleLogout}
@@ -166,6 +180,15 @@ function WorkspaceList() {
           organizationId={selectedOrg}
           onSubmit={handleFormSubmit}
           onCancel={() => setShowCreateForm(false)}
+        />
+      )}
+
+      {showImportModal && selectedOrg && (
+        <WorkspaceImportModal
+          organizationId={selectedOrg}
+          isOpen={showImportModal}
+          onClose={() => setShowImportModal(false)}
+          onImportComplete={handleImportComplete}
         />
       )}
     </div>
