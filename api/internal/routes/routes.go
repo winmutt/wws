@@ -59,6 +59,16 @@ func SetupRoutes(r *mux.Router) {
 	workspaces.HandleFunc("/{id}/stop", handlers.Adapter(handlers.StopWorkspaceHandler)).Methods("POST")
 	workspaces.HandleFunc("/{id}/restart", handlers.Adapter(handlers.RestartWorkspaceHandler)).Methods("POST")
 
+	// Workspace export/import routes
+	workspaces.HandleFunc("/export", handlers.Adapter(handlers.ExportWorkspaceHandler)).Methods("POST")
+	workspaces.HandleFunc("/import", handlers.Adapter(handlers.ImportWorkspaceHandler)).Methods("POST")
+	workspaces.HandleFunc("/export/status", handlers.Adapter(handlers.GetExportStatusHandler)).Methods("GET")
+	workspaces.HandleFunc("/import/status", handlers.Adapter(handlers.GetImportStatusHandler)).Methods("GET")
+	workspaces.HandleFunc("/exports", handlers.Adapter(handlers.ListExportsHandler)).Methods("GET")
+	workspaces.HandleFunc("/imports", handlers.Adapter(handlers.ListImportsHandler)).Methods("GET")
+	workspaces.HandleFunc("/export/download", handlers.Adapter(handlers.DownloadExportHandler)).Methods("GET")
+	workspaces.HandleFunc("/export", handlers.Adapter(handlers.DeleteExportHandler)).Methods("DELETE")
+
 	// Audit log routes (admin only)
 	audit := api.PathPrefix("/audit").Subrouter()
 	audit.HandleFunc("", handlers.GetAuditLogsHandler).Methods("GET")
