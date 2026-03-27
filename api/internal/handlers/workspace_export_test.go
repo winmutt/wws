@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"bytes"
+	"database/sql"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -12,10 +13,28 @@ import (
 
 	"wws/api/internal/db"
 	"wws/api/internal/models"
+
+	_ "github.com/mattn/go-sqlite3"
 )
 
-func initExportTestDB(t *testing.T) {
+func setupExportTestDB(t *testing.T) *sql.DB {
+	t.Helper()
+
+	// Create a fresh test database
+	testDB, err := sql.Open("sqlite3", ":memory:")
+	if err != nil {
+		t.Fatalf("Failed to open test database: %v", err)
+	}
+
+	// Create all required tables
 	statements := []string{
+		`CREATE TABLE IF NOT EXISTS users (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			github_id TEXT UNIQUE NOT NULL,
+			username TEXT NOT NULL,
+			email TEXT,
+			created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+		)`,
 		`CREATE TABLE IF NOT EXISTS members (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
 			user_id INTEGER NOT NULL,
@@ -24,6 +43,13 @@ func initExportTestDB(t *testing.T) {
 			invited_by INTEGER,
 			accepted INTEGER DEFAULT 0,
 			created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+		)`,
+		`CREATE TABLE IF NOT EXISTS organizations (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			name TEXT NOT NULL,
+			owner_id INTEGER NOT NULL,
+			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+			updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 		)`,
 		`CREATE TABLE IF NOT EXISTS workspaces (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -102,11 +128,28 @@ func initExportTestDB(t *testing.T) {
 	}
 
 	for _, stmt := range statements {
-		_, err := db.DB.Exec(stmt)
+		_, err := testDB.Exec(stmt)
 		if err != nil {
 			t.Fatalf("Failed to create table: %v", err)
 		}
 	}
+
+	return testDB
+}
+
+// initExportTestDB is deprecated - use setupExportTestDB instead
+func initExportTestDB(t *testing.T) {
+	testDB := setupExportTestDB(t)
+
+	// Temporarily set db.DB to our test database
+	originalDB := db.DB
+	db.DB = testDB
+
+	// Store the testDB in the test context for cleanup
+	t.Cleanup(func() {
+		testDB.Close()
+		db.DB = originalDB
+	})
 }
 
 func TestExportWorkspaceHandler_Unauthorized(t *testing.T) {
@@ -145,6 +188,9 @@ func TestImportWorkspaceHandler_Unauthorized(t *testing.T) {
 }
 
 func TestGetExportStatusHandler_NotFound(t *testing.T) {
+	// Set up test database
+	initExportTestDB(t)
+
 	req := httptest.NewRequest("GET", "/api/v1/workspaces/export/status?id=9999", nil)
 	rr := httptest.NewRecorder()
 
