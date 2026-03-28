@@ -66,13 +66,135 @@ func TestMain(m *testing.M) {
 			state TEXT UNIQUE NOT NULL,
 			created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 		)`,
-		`CREATE TABLE IF NOT EXISTS organizations (
+		`CREATE TABLE IF NOT EXISTS invitations (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			organization_id INTEGER NOT NULL,
+			email TEXT NOT NULL,
+			token TEXT UNIQUE NOT NULL,
+			status TEXT NOT NULL DEFAULT 'pending',
+			expires_at DATETIME NOT NULL,
+			created_by INTEGER NOT NULL,
+			created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+		)`,
+		`CREATE TABLE IF NOT EXISTS members (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			user_id INTEGER NOT NULL,
+			organization_id INTEGER NOT NULL,
+			role TEXT NOT NULL DEFAULT 'member',
+			invited_by INTEGER,
+			accepted INTEGER DEFAULT 0,
+			created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+		)`,
+		`CREATE TABLE IF NOT EXISTS teams (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			organization_id INTEGER NOT NULL,
+			name TEXT NOT NULL,
+			description TEXT,
+			created_by INTEGER NOT NULL,
+			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+			updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+		)`,
+		`CREATE TABLE IF NOT EXISTS workspace_templates (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
 			name TEXT NOT NULL,
+			description TEXT,
+			organization_id INTEGER,
+			provider TEXT NOT NULL DEFAULT 'podman',
+			bootstrap_script TEXT,
+			is_public INTEGER DEFAULT 0,
+			created_by INTEGER NOT NULL,
+			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+			updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+		)`,
+		`CREATE TABLE IF NOT EXISTS team_template_access (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			team_id INTEGER NOT NULL,
+			template_id INTEGER NOT NULL,
+			permission TEXT NOT NULL DEFAULT 'view',
+			granted_by INTEGER NOT NULL,
+			granted_at DATETIME DEFAULT CURRENT_TIMESTAMP
+		)`,
+		`CREATE TABLE IF NOT EXISTS workspaces (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			tag TEXT UNIQUE NOT NULL,
+			name TEXT NOT NULL,
+			organization_id INTEGER NOT NULL,
 			owner_id INTEGER NOT NULL,
+			provider TEXT NOT NULL,
+			status TEXT NOT NULL,
+			config TEXT,
+			region TEXT,
+			template_id INTEGER,
 			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 			updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-			FOREIGN KEY (owner_id) REFERENCES users(id)
+			deleted_at DATETIME
+		)`,
+		`CREATE TABLE IF NOT EXISTS workspace_languages (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			workspace_id INTEGER NOT NULL,
+			language TEXT NOT NULL,
+			version TEXT,
+			install_script TEXT
+		)`,
+		`CREATE TABLE IF NOT EXISTS workspace_exports (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			workspace_id INTEGER NOT NULL,
+			export_path TEXT NOT NULL,
+			export_format TEXT NOT NULL DEFAULT 'json',
+			file_size_mb REAL,
+			status TEXT NOT NULL DEFAULT 'pending',
+			error_message TEXT,
+			created_by INTEGER NOT NULL,
+			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+			expires_at DATETIME
+		)`,
+		`CREATE TABLE IF NOT EXISTS workspace_imports (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			import_path TEXT NOT NULL,
+			import_format TEXT NOT NULL DEFAULT 'json',
+			status TEXT NOT NULL DEFAULT 'pending',
+			error_message TEXT,
+			workspace_id INTEGER,
+			created_by INTEGER NOT NULL,
+			created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+		)`,
+		`CREATE TABLE IF NOT EXISTS api_keys (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			user_id INTEGER NOT NULL,
+			key_hash TEXT UNIQUE NOT NULL,
+			prefix TEXT NOT NULL,
+			name TEXT,
+			permissions TEXT NOT NULL,
+			expires_at DATETIME,
+			created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+		)`,
+		`CREATE TABLE IF NOT EXISTS quotas (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			organization_id INTEGER NOT NULL,
+			resource_type TEXT NOT NULL,
+			quota_limit INTEGER NOT NULL,
+			used INTEGER NOT NULL DEFAULT 0,
+			updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+		)`,
+		`CREATE TABLE IF NOT EXISTS workspace_sharing (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			workspace_id INTEGER NOT NULL,
+			user_id INTEGER NOT NULL,
+			role TEXT NOT NULL,
+			granted_by INTEGER NOT NULL,
+			granted_at DATETIME DEFAULT CURRENT_TIMESTAMP
+		)`,
+		`CREATE TABLE IF NOT EXISTS audit_logs (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			user_id INTEGER,
+			organization_id INTEGER,
+			action TEXT NOT NULL,
+			resource_type TEXT,
+			resource_id INTEGER,
+			details TEXT,
+			ip_address TEXT,
+			user_agent TEXT,
+			created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 		)`,
 	}
 

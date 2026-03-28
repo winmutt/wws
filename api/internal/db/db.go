@@ -632,6 +632,41 @@ func createTables() {
 		`CREATE INDEX IF NOT EXISTS idx_terminal_sessions_workspace ON terminal_sessions(workspace_id)`,
 		`CREATE INDEX IF NOT EXISTS idx_terminal_participants_session ON terminal_participants(session_id)`,
 		`CREATE INDEX IF NOT EXISTS idx_terminal_participants_user ON terminal_participants(user_id)`,
+
+		// Workspace export/import tables
+		`CREATE TABLE IF NOT EXISTS workspace_exports (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		workspace_id INTEGER NOT NULL,
+		export_path TEXT NOT NULL,
+		export_format TEXT NOT NULL DEFAULT 'json',
+		file_size_mb REAL,
+		status TEXT NOT NULL DEFAULT 'pending',
+		error_message TEXT,
+		created_by INTEGER NOT NULL,
+		created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+		expires_at DATETIME,
+		FOREIGN KEY (workspace_id) REFERENCES workspaces(id) ON DELETE CASCADE,
+		FOREIGN KEY (created_by) REFERENCES users(id)
+		);`,
+		`CREATE TABLE IF NOT EXISTS workspace_imports (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		import_path TEXT NOT NULL,
+		import_format TEXT NOT NULL DEFAULT 'json',
+		organization_id INTEGER NOT NULL,
+		imported_by INTEGER NOT NULL,
+		status TEXT NOT NULL DEFAULT 'pending',
+		imported_workspace_id INTEGER,
+		error_message TEXT,
+		created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+		FOREIGN KEY (organization_id) REFERENCES organizations(id),
+		FOREIGN KEY (imported_by) REFERENCES users(id),
+		FOREIGN KEY (imported_workspace_id) REFERENCES workspaces(id)
+		);`,
+		`CREATE INDEX IF NOT EXISTS idx_workspace_exports_workspace ON workspace_exports(workspace_id)`,
+		`CREATE INDEX IF NOT EXISTS idx_workspace_exports_status ON workspace_exports(status)`,
+		`CREATE INDEX IF NOT EXISTS idx_workspace_exports_created_by ON workspace_exports(created_by)`,
+		`CREATE INDEX IF NOT EXISTS idx_workspace_imports_org ON workspace_imports(organization_id)`,
+		`CREATE INDEX IF NOT EXISTS idx_workspace_imports_status ON workspace_imports(status)`,
 	}
 
 	for _, stmt := range statements {
