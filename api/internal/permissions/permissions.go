@@ -86,10 +86,10 @@ func GetTeamMembers(ctx context.Context, teamID int) ([]TeamMember, error) {
 // AddTeamMember adds a user to a team
 func AddTeamMember(ctx context.Context, teamID, userID, roleID, assignedBy int) error {
 	query := `
-		INSERT INTO team_members (team_id, user_id, role_id, joined_at, status)
-		VALUES (?, ?, ?, ?, 'active')
+		INSERT INTO team_members (team_id, user_id, role_id, joined_at, status, added_by, added_at)
+		VALUES (?, ?, ?, ?, 'active', ?, ?)
 	`
-	_, err := db.DB.ExecContext(ctx, query, teamID, userID, roleID, time.Now())
+	_, err := db.DB.ExecContext(ctx, query, teamID, userID, roleID, time.Now(), assignedBy, time.Now())
 	if err != nil {
 		return fmt.Errorf("failed to add team member: %w", err)
 	}
