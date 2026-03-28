@@ -29,14 +29,15 @@ type ExportRequest struct {
 
 // ExportResponse represents a workspace export response
 type ExportResponse struct {
-	ID          int       `json:"id"`
-	WorkspaceID int       `json:"workspace_id"`
-	ExportPath  string    `json:"export_path"`
-	Format      string    `json:"format"`
-	FileSizeMB  float64   `json:"file_size_mb,omitempty"`
-	Status      string    `json:"status"`
-	CreatedAt   time.Time `json:"created_at"`
-	ExpiresAt   time.Time `json:"expires_at"`
+	ID           int       `json:"id"`
+	WorkspaceID  int       `json:"workspace_id"`
+	ExportPath   string    `json:"export_path"`
+	Format       string    `json:"format"`
+	FileSizeMB   float64   `json:"file_size_mb,omitempty"`
+	Status       string    `json:"status"`
+	ErrorMessage string    `json:"error_message,omitempty"`
+	CreatedAt    time.Time `json:"created_at"`
+	ExpiresAt    time.Time `json:"expires_at"`
 }
 
 // ImportRequest represents a workspace import request
@@ -507,12 +508,13 @@ var GetExportStatusHandler Handler = func(w http.ResponseWriter, r *http.Request
 
 	var export ExportResponse
 	var createdAt, expiresAt string
+	var errorMessage sql.NullString
 
 	err := db.DB.QueryRow(
-		`SELECT id, workspace_id, export_path, export_format, file_size_mb, status, created_at, expires_at 
+		`SELECT id, workspace_id, export_path, export_format, file_size_mb, status, error_message, created_at, expires_at 
 		 FROM workspace_exports WHERE id = ?`,
 		exportID,
-	).Scan(&export.ID, &export.WorkspaceID, &export.ExportPath, &export.Format, &export.FileSizeMB, &export.Status, &createdAt, &expiresAt)
+	).Scan(&export.ID, &export.WorkspaceID, &export.ExportPath, &export.Format, &export.FileSizeMB, &export.Status, &errorMessage, &createdAt, &expiresAt)
 
 	if err == sql.ErrNoRows {
 		http.Error(w, "Export not found", http.StatusNotFound)
@@ -526,6 +528,9 @@ var GetExportStatusHandler Handler = func(w http.ResponseWriter, r *http.Request
 
 	export.CreatedAt, _ = time.Parse("2006-01-02 15:04:05", createdAt)
 	export.ExpiresAt, _ = time.Parse("2006-01-02 15:04:05", expiresAt)
+	if errorMessage.Valid {
+		export.ErrorMessage = errorMessage.String
+	}
 
 	json.NewEncoder(w).Encode(export)
 	return nil
@@ -578,7 +583,7 @@ var ListExportsHandler Handler = func(w http.ResponseWriter, r *http.Request) er
 	userID := userIDVal
 
 	rows, err := db.DB.Query(
-		`SELECT id, workspace_id, export_path, export_format, file_size_mb, status, created_at, expires_at 
+		`SELECT id, workspace_id, export_path, export_format, file_size_mb, status, error_message, created_at, expires_at 
 		 FROM workspace_exports WHERE created_by = ? ORDER BY created_at DESC`,
 		userID,
 	)
@@ -593,11 +598,15 @@ var ListExportsHandler Handler = func(w http.ResponseWriter, r *http.Request) er
 	for rows.Next() {
 		var exp ExportResponse
 		var createdAt, expiresAt string
-		if err := rows.Scan(&exp.ID, &exp.WorkspaceID, &exp.ExportPath, &exp.Format, &exp.FileSizeMB, &exp.Status, &createdAt, &expiresAt); err != nil {
+		var errorMessage sql.NullString
+		if err := rows.Scan(&exp.ID, &exp.WorkspaceID, &exp.ExportPath, &exp.Format, &exp.FileSizeMB, &exp.Status, &errorMessage, &createdAt, &expiresAt); err != nil {
 			continue
 		}
 		exp.CreatedAt, _ = time.Parse("2006-01-02 15:04:05", createdAt)
 		exp.ExpiresAt, _ = time.Parse("2006-01-02 15:04:05", expiresAt)
+		if errorMessage.Valid {
+			exp.ErrorMessage = errorMessage.String
+		}
 		exports = append(exports, exp)
 	}
 

@@ -59,6 +59,7 @@ interface WorkspaceExport {
   format: string;
   file_size_mb?: number;
   status: string;
+  error_message?: string;
   created_at: string;
   expires_at: string;
 }
