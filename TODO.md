@@ -152,8 +152,8 @@
 - [x] 2.4.10 Implement secret scanning (PR #258)
 
 ### 2.5 Testing Phase 2
-- [ ] 2.5.1 Write unit tests for collaboration features
-- [ ] 2.5.2 Write integration tests for team management
+- [x] 2.5.1 Write unit tests for collaboration features (PR #266)
+- [x] 2.5.2 Write integration tests for team management (PR #266)
 - [ ] 2.5.3 Write E2E tests for security features
 - [ ] 2.5.4 Test resource monitoring
 - [ ] 2.5.5 Test backup/restore
