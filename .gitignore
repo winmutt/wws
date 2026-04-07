@@ -1,0 +1,79 @@
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+wws
+api/main
+
+# Test binary, built with `go test -c`
+*.test
+
+# Output of the go coverage tool
+*.out
+coverage.txt
+*.cover.out
+
+# Go workspace file
+go.work
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Dependency directories
+vendor/
+api/vendor/
+
+# Node.js
+node_modules/
+web/node_modules/
+npm-debug.log
+yarn-error.log
+
+# Build outputs
+web/build/
+web/dist/
+api/dist/
+api/build/
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Cache directories
+web/node_modules/.cache/
+api/.cache/
+.opencode/
+
+# Data directories
+data/
+data/*.db
+*.sqlite
+*.sqlite3
+
+# Generated protobuf files (if generated during build)
+# api/pkg/proto/generated/
+# web/src/proto/generated/
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# OS generated files
+Thumbs.db
+.DS_Store
+
+# Testing
+tests/fixtures/*.actual.*
