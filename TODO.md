@@ -3,12 +3,12 @@
 ## Phase 1: Core Foundation (MVP) - Priority: High
 
 ### 1.1 Project Setup - ✅ Complete (PR #3)
-- [x] 1.1.1 Initialize Go module for backend
-- [x] 1.1.2 Set up Go project structure (api/, models/, middleware/)
-- [x] 1.1.3 Initialize React app for frontend
-- [x] 1.1.4 Set up React project structure (src/, public/, components/)
-- [x] 1.1.5 Configure SQLite database schema
-- [x] 1.1.6 Set up git hooks and CI/CD pipeline
+- [x] 1.1.1 Initialize Go module for backend (PR #3)
+- [x] 1.1.2 Set up Go project structure (api/, models/, middleware/) (PR #3)
+- [x] 1.1.3 Initialize React app for frontend (PR #3)
+- [x] 1.1.4 Set up React project structure (src/, public/, components/) (PR #3)
+- [x] 1.1.5 Configure SQLite database schema (PR #3)
+- [x] 1.1.6 Set up git hooks and CI/CD pipeline (PR #3)
 
 ### 1.2 Authentication & Organization - In Progress
 - [x] 1.2.1 Implement GitHub OAuth2 callback handler (#214, PR #215)
@@ -99,31 +99,31 @@
 - [x] 1.9.5 Update README.md with deployment instructions (PR #232)
 - [x] 1.9.6 Update api/go.mod for standalone module (PR #232)
 
-## Phase 2: Team Features - Priority: Medium
+## Phase 2: Team Features - Priority: Medium ✅ Complete
 
 ### 2.1 Collaboration
 - [x] 2.1.1 Implement shared workspace access (PR #260)
-- [ ] 2.1.2 Create team-based permissions system
-- [ ] 2.1.3 Build resource monitoring dashboard
+- [x] 2.1.2 Create team-based permissions system (PR #261)
+- [x] 2.1.3 Build resource monitoring dashboard (PR #261)
 - [x] 2.1.4 Create workspace templates system (PR #261)
 - [x] 2.1.5 Implement usage analytics tracking (PR #261)
-- [ ] 2.1.6 Build backup/restore functionality
-- [ ] 2.1.7 Implement tmux session sharing
-- [ ] 2.1.8 Create shared terminal functionality
-- [ ] 2.1.9 Build team workspace templates
-- [ ] 2.1.10 Implement workspace sharing UI
+- [x] 2.1.6 Build backup/restore functionality (PR #261)
+- [x] 2.1.7 Implement tmux session sharing (PR #262)
+- [x] 2.1.8 Create shared terminal functionality (PR #263)
+- [x] 2.1.9 Build team workspace templates (PR #264)
+- [x] 2.1.10 Implement workspace sharing UI (PR #260)
 
 ### 2.2 Management
-- [ ] 2.2.1 Improve Start/Stop/Restart UI
+- [x] 2.2.1 Improve Start/Stop/Restart UI (PR #260)
 - [x] 2.2.2 Implement workspace configuration persistence (PR #263)
 - [x] 2.2.3 Build usage metrics collection (PR #261)
-- [ ] 2.2.4 Create billing tracking system
+- [x] 2.2.4 Create billing tracking system (PR #261)
 - [x] 2.2.5 Implement idle timeout configuration (PR #262)
 - [x] 2.2.6 Build auto-shutdown logic for idle workspaces (PR #262)
-- [ ] 2.2.7 Create resource usage alerts
-- [ ] 2.2.8 Implement workspace scaling
-- [ ] 2.2.9 Build workspace history
-- [ ] 2.2.10 Create workspace export/import
+- [x] 2.2.7 Create resource usage alerts (PR #261)
+- [x] 2.2.8 Implement workspace scaling (PR #261)
+- [x] 2.2.9 Build workspace history (PR #261)
+- [x] 2.2.10 Create workspace export/import (PR #265)
 
 ### 2.3 Protocol Buffers Migration - Priority: High ✅ Complete
 - [x] 2.3.1 Define protobuf schemas for all API messages (PR #248)

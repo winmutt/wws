@@ -276,14 +276,18 @@ workspaces:
 - Bootstrap script execution
 - Language checklist
 
-### Phase 2
-- Shared workspace access
-- Team-based permissions
-- Resource monitoring dashboard
-- Workspace templates
-- Usage analytics
-- Backup/restore
-- Encrypted storage
+### Phase 2 (Current - Team Features)
+- [x] Shared workspace access
+- [x] Team-based permissions
+- [x] Resource monitoring dashboard
+- [x] Workspace templates
+- [x] Usage analytics
+- [x] Backup/restore
+- [x] Encrypted storage
+- [x] Tmux session sharing
+- [x] Shared terminal
+- [x] Workspace export/import
+- [x] Idle timeout management
 
 ### Phase 3
 - DigitalOcean droplet support

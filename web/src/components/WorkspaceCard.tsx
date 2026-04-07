@@ -116,8 +116,14 @@ function WorkspaceCard({ workspace, organizationId, onDelete, onStatusChange }: 
   };
 
   const handleStart = () => executeAction('start', 'Start');
-  const handleStop = () => executeAction('stop', 'Stop');
-  const handleRestart = () => executeAction('restart', 'Restart');
+  const handleStop = () => {
+    if (!confirm(`Are you sure you want to stop "${workspace.name}"?`)) return;
+    executeAction('stop', 'Stop');
+  };
+  const handleRestart = () => {
+    if (!confirm(`Are you sure you want to restart "${workspace.name}"?`)) return;
+    executeAction('restart', 'Restart');
+  };
 
   const handleDelete = async () => {
     if (!confirm(`Are you sure you want to delete "${workspace.name}"? This action cannot be undone.`)) {
