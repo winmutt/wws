@@ -3,12 +3,12 @@
 ## Phase 1: Core Foundation (MVP) - Priority: High
 
 ### 1.1 Project Setup - ✅ Complete (PR #3)
-- [x] 1.1.1 Initialize Go module for backend
-- [x] 1.1.2 Set up Go project structure (api/, models/, middleware/)
-- [x] 1.1.3 Initialize React app for frontend
-- [x] 1.1.4 Set up React project structure (src/, public/, components/)
-- [x] 1.1.5 Configure SQLite database schema
-- [x] 1.1.6 Set up git hooks and CI/CD pipeline
+- [x] 1.1.1 Initialize Go module for backend (PR #3)
+- [x] 1.1.2 Set up Go project structure (api/, models/, middleware/) (PR #3)
+- [x] 1.1.3 Initialize React app for frontend (PR #3)
+- [x] 1.1.4 Set up React project structure (src/, public/, components/) (PR #3)
+- [x] 1.1.5 Configure SQLite database schema (PR #3)
+- [x] 1.1.6 Set up git hooks and CI/CD pipeline (PR #3)
 
 ### 1.2 Authentication & Organization - In Progress
 - [x] 1.2.1 Implement GitHub OAuth2 callback handler (#214, PR #215)
