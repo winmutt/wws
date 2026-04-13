@@ -231,8 +231,16 @@
 - [x] 4.2.3 Document authentication flow (PR #273)
 - [x] 4.2.4 Create API client SDK (PR #273)
 - [x] 4.2.5 Document error codes (PR #273)
+- [x] 4.2.6 Create /api/v1/docs endpoint with all 88 endpoints documented
 
-### 4.3 Developer Setup Guide - ✅ Complete
+### 4.3 Help Documentation
+- [ ] 4.3.1 Create application user guide
+- [ ] 4.3.2 Document workspace workflows
+- [ ] 4.3.3 Create troubleshooting guide
+- [ ] 4.3.4 Build in-app help system
+- [ ] 4.3.5 Create FAQ section
+
+### 4.4 Developer Setup Guide - ✅ Complete
 - [x] 4.3.1 Document development environment setup (PR #273)
 - [x] 4.3.2 Create local development guide (PR #273)
 - [x] 4.3.3 Document dependency installation (PR #273)

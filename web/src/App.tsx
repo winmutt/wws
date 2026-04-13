@@ -12,8 +12,13 @@ function App() {
     <AuthProvider>
       <div className="min-h-screen bg-gray-100">
         <nav className="bg-gray-800 text-white p-4">
-          <div className="container mx-auto">
+          <div className="container mx-auto flex justify-between items-center">
             <h1 className="text-xl font-bold">WWS - Winmutt's Work Spaces</h1>
+            <div className="flex space-x-4">
+              <a href="/" className="hover:text-gray-300">Dashboard</a>
+              <a href="/organizations" className="hover:text-gray-300">Organizations</a>
+              <a href="/workspaces" className="hover:text-gray-300">Workspaces</a>
+            </div>
           </div>
         </nav>
         <main className="container mx-auto p-4">

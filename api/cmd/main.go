@@ -102,6 +102,13 @@ func main() {
 	log.Printf("GitHub OAuth configured for: %s", config.GitHub.CallbackURL)
 	log.Printf("CORS allowed origins: %v", config.Server.CORS.Origins)
 
+	// Start HTTP server
+	go func() {
+		if err := httpServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Printf("HTTP server error: %v", err)
+		}
+	}()
+
 	// Handle graceful shutdown
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
