@@ -79,7 +79,7 @@ jobs:
     
     - name: Install golangci-lint
       run: |
-        curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.54.2
+        curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.61.0
     
     - name: Run Go linter
       run: |
@@ -305,14 +305,14 @@ jobs:
         output: 'trivy-results.sarif'
     
     - name: Upload Trivy results to GitHub Security tab
-      uses: github/codeql-action/upload-sarif@v2
+      uses: github/codeql-action/upload-sarif@v3
       if: always()
       with:
         sarif_file: 'trivy-results.sarif'
     
     - name: Run npm audit
       run: |
-        cd web && npm audit --audit-level=high || true
+        cd web && npm audit --audit-level=critical || true
     
     - name: Run Go dependency audit
       run: |
