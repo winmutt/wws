@@ -143,7 +143,7 @@ func cleanupExpiredStates() {
 	}
 
 	stateStoreMutex.Lock()
-	for state, _ := range stateStore {
+	for state := range stateStore {
 		var exists int
 		err := oauthDB.QueryRowContext(ctx, "SELECT 1 FROM oauth_states WHERE state = ?", state).Scan(&exists)
 		if err != nil {
