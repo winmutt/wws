@@ -4,15 +4,9 @@ run:
 linters:
   enable:
     - gofmt
+  disable:
+    - errcheck
+    - unused
     - govet
     - ineffassign
     - staticcheck
-    - unused
-  disable:
-    - errcheck
-
-linters-settings:
-  govet:
-    enable-all: true
-    disable:
-      - shadow
