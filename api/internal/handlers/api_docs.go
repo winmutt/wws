@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"fmt"
 	"net/http"
 )
 
@@ -29,11 +30,20 @@ type EndpointInfo struct {
 }
 
 func APIDocsHandler(w http.ResponseWriter, r *http.Request) error {
+	host := r.Host
+	scheme := "http"
+	if forwardedProto := r.Header.Get("X-Forwarded-Proto"); forwardedProto != "" {
+		scheme = forwardedProto
+	} else if r.TLS != nil {
+		scheme = "https"
+	}
+	baseURL := fmt.Sprintf("%s://%s/api/v1", scheme, host)
+
 	docs := APIDocumentation{
 		Title:       "Winmutt Work Spaces API",
 		Version:     "1.0.0",
 		Description: "REST API for Winmutt Work Spaces - A remote workspace provisioning system for engineering organizations",
-		BaseURL:     "http://localhost:8080/api/v1",
+		BaseURL:     baseURL,
 		Auth: AuthInfo{
 			Type:        "OAuth2 / Session-based",
 			Description: "Authenticate via GitHub OAuth2 to receive a session token. Include the session token in the Cookie header for subsequent requests.",
