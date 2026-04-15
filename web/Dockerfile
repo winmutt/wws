@@ -1,12 +1,14 @@
 FROM node:20-alpine AS builder
 
+ARG REACT_APP_API_URL=http://192.168.1.96:8080
+
 WORKDIR /build
 
 COPY web/package.json ./
 RUN npm install --legacy-peer-deps
 
 COPY web/ ./
-RUN npm run build
+RUN echo "REACT_APP_API_URL=$REACT_APP_API_URL" > .env && npm run build
 
 FROM docker.io/library/nginx:alpine
 
