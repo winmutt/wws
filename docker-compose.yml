@@ -10,7 +10,7 @@ services:
     environment:
       - PORT=8080
       - HOST=192.168.1.96
-      - DATABASE_URL=/data/wws.db
+      - DATABASE_PATH=/data/wws.db
       - GITHUB_CLIENT_ID=${GITHUB_CLIENT_ID}
       - GITHUB_CLIENT_SECRET=${GITHUB_CLIENT_SECRET}
       - GITHUB_CALLBACK_URL=${GITHUB_CALLBACK_URL:-http://192.168.1.96:8080/oauth/callback}

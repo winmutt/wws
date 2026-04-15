@@ -1,6 +1,8 @@
 package routes
 
 import (
+	"net/http"
+
 	"github.com/gorilla/mux"
 
 	"wws/api/internal/analytics"
@@ -9,6 +11,13 @@ import (
 
 func SetupRoutes(r *mux.Router) {
 	api := r.PathPrefix("/api/v1").Subrouter()
+
+	// API Documentation
+	api.HandleFunc("/docs", func(w http.ResponseWriter, r *http.Request) {
+		if err := handlers.APIDocsHandler(w, r); err != nil {
+			handlers.WriteError(w, http.StatusInternalServerError, err)
+		}
+	}).Methods("GET")
 
 	// Health check
 	api.HandleFunc("/health", handlers.Adapter(handlers.HealthHandler)).Methods("GET")

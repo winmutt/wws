@@ -1,19 +1,26 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 function Login() {
   const { login, isAuthenticated } = useAuth();
+  const navigate = useNavigate();
+
+  React.useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/');
+    }
+  }, [isAuthenticated, navigate]);
 
   if (isAuthenticated) {
-    window.location.href = '/';
     return null;
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="bg-white p-8 rounded-lg shadow-md max-w-md w-full">
-        <h2 className="text-2xl font-bold mb-6 text-center">Welcome to WWS</h2>
-        <p className="text-gray-600 mb-6 text-center">
+    <div className="p-4 max-w-md mx-auto">
+      <div className="bg-white rounded-lg shadow-lg p-8">
+        <h2 className="text-2xl font-bold mb-2">Welcome Back</h2>
+        <p className="text-gray-600 mb-6">
           Sign in with GitHub to access your workspaces
         </p>
         <button
@@ -25,9 +32,20 @@ function Login() {
           </svg>
           <span>Sign in with GitHub</span>
         </button>
-        <p className="text-xs text-gray-500 mt-4 text-center">
-          By signing in, you agree to our Terms of Service
+        <p className="text-xs text-gray-500 mt-6 text-center">
+          By signing in, you agree to our Terms of Service and Privacy Policy
         </p>
+        <div className="mt-6 pt-6 border-t border-gray-200">
+          <p className="text-sm text-gray-600">
+            New to WWS?{' '}
+            <button
+              onClick={() => navigate('/register')}
+              className="text-blue-600 hover:text-blue-800 font-medium"
+            >
+              Create an account
+            </button>
+          </p>
+        </div>
       </div>
     </div>
   );

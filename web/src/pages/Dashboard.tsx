@@ -91,23 +91,32 @@ function Dashboard() {
             <div className="bg-white rounded-lg shadow p-6">
               <h3 className="text-sm font-medium text-gray-500 mb-2">Total Organizations</h3>
               <p className="text-3xl font-bold text-gray-900">{stats.totalOrganizations}</p>
-              <a href="/organizations" className="text-blue-600 hover:text-blue-800 text-sm mt-2">
+              <button
+                onClick={() => navigate('/organizations')}
+                className="text-blue-600 hover:text-blue-800 text-sm mt-2"
+              >
                 View Organizations →
-              </a>
+              </button>
             </div>
             <div className="bg-white rounded-lg shadow p-6">
               <h3 className="text-sm font-medium text-gray-500 mb-2">Total Workspaces</h3>
               <p className="text-3xl font-bold text-gray-900">{stats.totalWorkspaces}</p>
-              <a href="/workspaces" className="text-blue-600 hover:text-blue-800 text-sm mt-2">
+              <button
+                onClick={() => navigate('/workspaces')}
+                className="text-blue-600 hover:text-blue-800 text-sm mt-2"
+              >
                 View Workspaces →
-              </a>
+              </button>
             </div>
             <div className="bg-white rounded-lg shadow p-6">
               <h3 className="text-sm font-medium text-gray-500 mb-2">Running Workspaces</h3>
               <p className="text-3xl font-bold text-green-600">{stats.runningWorkspaces}</p>
-              <a href="/workspaces" className="text-blue-600 hover:text-blue-800 text-sm mt-2">
+              <button
+                onClick={() => navigate('/workspaces')}
+                className="text-blue-600 hover:text-blue-800 text-sm mt-2"
+              >
                 View Running →
-              </a>
+              </button>
             </div>
           </div>
 
@@ -119,12 +128,12 @@ function Dashboard() {
               {recentWorkspaces.length === 0 ? (
                 <div className="text-center py-8">
                   <p className="text-gray-600 mb-4">No workspaces yet</p>
-                  <a
-                    href="/workspaces"
-                    className="inline-block bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700"
+                  <button
+                    onClick={() => navigate('/workspaces')}
+                    className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700"
                   >
                     Create Your First Workspace
-                  </a>
+                  </button>
                 </div>
               ) : (
                 <div className="space-y-4">
@@ -146,12 +155,12 @@ function Dashboard() {
                         >
                           {workspace.status}
                         </span>
-                        <a
-                          href="/workspaces"
+                        <button
+                          onClick={() => navigate('/workspaces')}
                           className="text-blue-600 hover:text-blue-800 text-sm"
                         >
                           View
-                        </a>
+                        </button>
                       </div>
                     </div>
                   ))}

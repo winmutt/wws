@@ -8,7 +8,7 @@ RUN npm install --legacy-peer-deps
 COPY web/ ./
 RUN npm run build
 
-FROM nginx:alpine
+FROM docker.io/library/nginx:alpine
 
 COPY --from=builder /build/build /usr/share/nginx/html
 
