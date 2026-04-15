@@ -45,6 +45,10 @@ func main() {
 	// Initialize audit log handler
 	handlers.AuditLogHandlerInstance = &handlers.AuditLogHandler{DB: db.DB}
 
+	// Initialize OAuth state store
+	handlers.InitOAuthStateStore()
+	handlers.SetOAuthDB(db.DB)
+
 	// Initialize quota handler
 	handlers.QuotaHandlerInstance = &handlers.QuotaHandler{DB: db.DB}
 

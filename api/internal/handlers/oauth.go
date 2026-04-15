@@ -33,16 +33,17 @@ func getGitHubOAuthConfig() *oauth2.Config {
 	once.Do(func() {
 		clientID := os.Getenv("GITHUB_CLIENT_ID")
 		clientSecret := os.Getenv("GITHUB_CLIENT_SECRET")
-		callbackURL := os.Getenv("GITHUB_CALLBACK_URL")
 
-		if clientID == "" || clientSecret == "" || callbackURL == "" {
-			log.Fatal("GitHub OAuth configuration is incomplete")
+		if clientID == "" || clientSecret == "" {
+			log.Printf("Warning: GitHub OAuth not configured (GITHUB_CLIENT_ID or GITHUB_CLIENT_SECRET missing)")
+			githubOAuthConfig = nil
+			return
 		}
 
 		githubOAuthConfig = &oauth2.Config{
 			ClientID:     clientID,
 			ClientSecret: clientSecret,
-			RedirectURL:  callbackURL,
+			RedirectURL:  "",
 			Endpoint:     github.Endpoint,
 			Scopes:       []string{"user:email", "read:user"},
 		}
@@ -78,6 +79,10 @@ func SetOAuthDB(db *sql.DB) {
 }
 
 func StoreOAuthState(state string) error {
+	if oauthDB == nil {
+		return fmt.Errorf("OAuth database not initialized")
+	}
+
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
