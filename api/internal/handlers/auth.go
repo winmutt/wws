@@ -42,5 +42,5 @@ func GitHubAuthHandler(w http.ResponseWriter, r *http.Request) error {
 }
 
 func GitHubCallbackHandler(w http.ResponseWriter, r *http.Request) error {
-	return WriteJSON(w, http.StatusOK, map[string]string{"message": "GitHub callback endpoint"})
+	return OAuthCallbackHandler(w, r)
 }
