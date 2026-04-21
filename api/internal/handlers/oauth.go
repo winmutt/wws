@@ -159,6 +159,14 @@ func cleanupExpiredStates() {
 }
 
 func OAuthCallbackHandler(w http.ResponseWriter, r *http.Request) error {
+	host := r.Host
+	scheme := "http"
+	if forwardedProto := r.Header.Get("X-Forwarded-Proto"); forwardedProto != "" {
+		scheme = forwardedProto
+	} else if r.TLS != nil {
+		scheme = "https"
+	}
+
 	ctx, cancel := context.WithTimeout(r.Context(), 30*time.Second)
 	defer cancel()
 
@@ -212,7 +220,11 @@ func OAuthCallbackHandler(w http.ResponseWriter, r *http.Request) error {
 		MaxAge:   86400 * 7,
 	})
 
-	http.Redirect(w, r, "/dashboard", http.StatusFound)
+	redirectURL := os.Getenv("FRONTEND_URL")
+	if redirectURL == "" {
+		redirectURL = fmt.Sprintf("%s://%s", scheme, host)
+	}
+	http.Redirect(w, r, redirectURL, http.StatusFound)
 	return nil
 }
 
