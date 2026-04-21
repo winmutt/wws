@@ -22,7 +22,7 @@ func GitHubAuthHandler(w http.ResponseWriter, r *http.Request) error {
 
 	callbackURL := os.Getenv("GITHUB_CALLBACK_URL")
 	if callbackURL == "" {
-		callbackURL = fmt.Sprintf("%s://%s/oauth/callback", scheme, host)
+		callbackURL = fmt.Sprintf("%s://%s/api/v1/auth/github/callback", scheme, host)
 	}
 
 	config.RedirectURL = callbackURL
