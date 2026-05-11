@@ -63,9 +63,16 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     name: Code Quality
+    needs: protobuf
     
     steps:
     - uses: actions/checkout@v4
+    
+    - name: Download generated protobuf
+      uses: actions/download-artifact@v4
+      with:
+        name: generated-proto
+        path: api/proto
     
     - name: Set up Go
       uses: actions/setup-go@v4
