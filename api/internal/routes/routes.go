@@ -10,11 +10,11 @@ import (
 )
 
 func SetupRoutes(r *mux.Router) {
-    // Global OPTIONS handler for CORS preflight
-    r.PathPrefix("/api/v1").Methods("OPTIONS").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-        // No body needed; CORSMiddleware will set appropriate headers
-        w.WriteHeader(http.StatusOK)
-    })
+	// Global OPTIONS handler for CORS preflight
+	r.PathPrefix("/api/v1").Methods("OPTIONS").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// No body needed; CORSMiddleware will set appropriate headers
+		w.WriteHeader(http.StatusOK)
+	})
 	api := r.PathPrefix("/api/v1").Subrouter()
 
 	// API Documentation

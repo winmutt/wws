@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"os"
 	"time"
 
 	"wws/api/internal/handlers"
@@ -30,6 +31,15 @@ type UserInfo struct {
 }
 
 func AuthMiddleware(next http.Handler) http.Handler {
+	// If DEBUG_SKIP_AUTH is set, bypass authentication for testing
+	if os.Getenv("DEBUG_SKIP_AUTH") == "true" {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			// Set a dummy user ID for downstream handlers
+			ctx := context.WithValue(r.Context(), UserIDKey, 1)
+			r = r.WithContext(ctx)
+			next.ServeHTTP(w, r)
+		})
+	}
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		cookie, err := r.Cookie("session_token")
 		if err != nil {

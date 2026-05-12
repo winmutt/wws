@@ -76,8 +76,8 @@ func main() {
 	r.Use(middleware.RateLimitMiddleware(middleware.DefaultRateLimitConfig()))
 	r.Use(middleware.AuditMiddleware(db.DB))
 
-    // Wrap router with CORS middleware before passing to server so OPTIONS is handled even for unmapped routes
-    corsHandler := middleware.CORSMiddleware(config.Server.CORS.Origins)(r)
+	// Wrap router with CORS middleware before passing to server so OPTIONS is handled even for unmapped routes
+	corsHandler := middleware.CORSMiddleware(config.Server.CORS.Origins)(r)
 
 	httpPort := os.Getenv("PORT")
 	if httpPort == "" {
