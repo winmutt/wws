@@ -1,9 +1,60 @@
-const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:8080/api/v1';
+const getApiBase = (): string => {
+  if (process.env.REACT_APP_API_URL) {
+    return process.env.REACT_APP_API_URL;
+  }
+  const hostname = window.location.hostname;
+  const protocol = window.location.protocol;
+  return `${protocol}//${hostname}:8080/api/v1`;
+};
+
+const API_BASE = getApiBase();
 
 interface Session {
   user_id: number;
   expires_at: string;
 }
+
+const SESSION_TOKEN_KEY = 'session_token';
+const GITHUB_USERNAME_KEY = 'github_username';
+
+const getAuthHeaders = (): Headers => {
+  const token = localStorage.getItem(SESSION_TOKEN_KEY);
+  const headers = new Headers();
+  if (token) {
+    headers.set('Authorization', `Bearer ${token}`);
+  }
+  return headers;
+};
+
+const fetchWithAuth = async (url: string, options?: RequestInit): Promise<Response> => {
+  const headers = getAuthHeaders();
+  return fetch(url, { ...options, headers });
+};
+
+const request = async (method: string, endpoint: string, data?: any): Promise<any> => {
+  const url = `${API_BASE}${endpoint}`;
+  const headers = getAuthHeaders();
+  headers.set('Content-Type', 'application/json');
+  
+  const init: RequestInit = {
+    method,
+    headers,
+    credentials: 'include'
+  };
+  
+  if (data) {
+    init.body = JSON.stringify(data);
+  }
+  
+  const response = await fetch(url, init);
+  
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}));
+    throw new Error(error.message || `Request failed with status ${response.status}`);
+  }
+  
+  return response.json();
+};
 
 interface User {
   id: number;
@@ -88,178 +139,88 @@ interface ImportRequest {
 
 const auth = {
   async login(githubCode: string): Promise<{ redirect: string }> {
-    const response = await fetch(`${API_BASE}/auth/github/callback?code=${githubCode}`, {
-      method: 'GET',
-      credentials: 'include',
-    });
-    
-    if (!response.ok) {
-      throw new Error('Login failed');
-    }
-    
-    return response.json();
+    return request('GET', `/auth/github/callback?code=${encodeURIComponent(githubCode)}`);
   },
 
   async getSession(): Promise<Session | null> {
-    const response = await fetch(`${API_BASE}/sessions`, {
-      credentials: 'include',
-    });
-    
-    if (!response.ok) {
+    try {
+      return await request('GET', '/sessions');
+    } catch {
       return null;
     }
-    
-    return response.json();
   },
 
   async refreshSession(): Promise<Session> {
-    const response = await fetch(`${API_BASE}/sessions/refresh`, {
-      method: 'POST',
-      credentials: 'include',
-    });
-    
-    if (!response.ok) {
-      throw new Error('Session refresh failed');
-    }
-    
-    return response.json();
+    return request('POST', '/sessions/refresh');
   },
 
   async logout(): Promise<void> {
-    await fetch(`${API_BASE}/sessions/revoke`, {
-      method: 'DELETE',
-      credentials: 'include',
-    });
+    await request('DELETE', '/sessions/revoke');
   },
 
   async logoutAll(): Promise<void> {
-    await fetch(`${API_BASE}/sessions/revoke-all`, {
-      method: 'DELETE',
-      credentials: 'include',
-    });
+    await request('DELETE', '/sessions/revoke-all');
+  },
+
+  async getCurrentUser(): Promise<User> {
+    const session = await this.getSession();
+    if (!session) {
+      throw new Error('No active session');
+    }
+    
+    return request('GET', `/users/${session.user_id}`);
+  },
+
+  async getVersion(): Promise<{ version: string; build_time: string }> {
+    const response = await fetch(`${API_BASE}/version`);
+    
+    if (!response.ok) {
+      throw new Error('Failed to fetch version');
+    }
+    
+    return response.json();
   },
 };
 
 const users = {
   async list(): Promise<User[]> {
-    const response = await fetch(`${API_BASE}/users`, {
-      credentials: 'include',
-    });
-    
-    if (!response.ok) {
-      throw new Error('Failed to fetch users');
-    }
-    
-    return response.json();
+    return request('GET', '/users');
   },
 
   async get(id: number): Promise<User> {
-    const response = await fetch(`${API_BASE}/users/${id}`, {
-      credentials: 'include',
-    });
-    
-    if (!response.ok) {
-      throw new Error('Failed to fetch user');
-    }
-    
-    return response.json();
+    return request('GET', `/users/${id}`);
   },
 };
 
 const organizations = {
   async list(): Promise<Organization[]> {
-    const response = await fetch(`${API_BASE}/organizations`, {
-      credentials: 'include',
-    });
-    
-    if (!response.ok) {
-      throw new Error('Failed to fetch organizations');
-    }
-    
-    return response.json();
+    return request('GET', '/organizations');
   },
 
   async create(name: string): Promise<Organization> {
-    const response = await fetch(`${API_BASE}/organizations`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name }),
-      credentials: 'include',
-    });
-    
-    if (!response.ok) {
-      throw new Error('Failed to create organization');
-    }
-    
-    return response.json();
+    return request('POST', '/organizations', { name });
   },
 
   async members(orgId: number): Promise<Member[]> {
-    const response = await fetch(`${API_BASE}/organizations/members?organization_id=${orgId}`, {
-      credentials: 'include',
-    });
-    
-    if (!response.ok) {
-      throw new Error('Failed to fetch members');
-    }
-    
-    return response.json();
+    return request('GET', `/organizations/members?organization_id=${orgId}`);
   },
 
   async removeMember(orgId: number, userId: number): Promise<void> {
-    const response = await fetch(`${API_BASE}/organizations/members`, {
-      method: 'DELETE',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ organization_id: orgId, user_id: userId }),
-      credentials: 'include',
-    });
-    
-    if (!response.ok) {
-      throw new Error('Failed to remove member');
-    }
+    await request('DELETE', '/organizations/members', { organization_id: orgId, user_id: userId });
   },
 
   async assignRole(orgId: number, userId: number, role: string): Promise<void> {
-    const response = await fetch(`${API_BASE}/organizations/roles`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ organization_id: orgId, user_id: userId, role }),
-      credentials: 'include',
-    });
-    
-    if (!response.ok) {
-      throw new Error('Failed to assign role');
-    }
+    await request('POST', '/organizations/roles', { organization_id: orgId, user_id: userId, role });
   },
 };
 
 const invitations = {
   async create(orgId: number, email: string): Promise<Invitation> {
-    const response = await fetch(`${API_BASE}/organizations/invitations`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ organization_id: orgId, email }),
-      credentials: 'include',
-    });
-    
-    if (!response.ok) {
-      throw new Error('Failed to create invitation');
-    }
-    
-    return response.json();
+    return request('POST', '/organizations/invitations', { organization_id: orgId, email });
   },
 
   async accept(token: string): Promise<void> {
-    const response = await fetch(`${API_BASE}/organizations/invitations/accept`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ token }),
-      credentials: 'include',
-    });
-    
-    if (!response.ok) {
-      throw new Error('Failed to accept invitation');
-    }
+    await request('POST', '/organizations/invitations/accept', { token });
   },
 };
 

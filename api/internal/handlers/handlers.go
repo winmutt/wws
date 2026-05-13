@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+
+	"wws/api/pkg"
 )
 
 type Handler func(w http.ResponseWriter, r *http.Request) error
@@ -194,4 +196,12 @@ func ComplianceCheckComplianceStatusHandler(w http.ResponseWriter, r *http.Reque
 	} else {
 		http.Error(w, "Compliance reporting not configured", http.StatusServiceUnavailable)
 	}
+}
+
+// VersionHandler returns the application version
+func VersionHandler(w http.ResponseWriter, r *http.Request) error {
+	return WriteJSON(w, http.StatusOK, map[string]string{
+		"version":    pkg.Version,
+		"build_time": pkg.BuildTime,
+	})
 }

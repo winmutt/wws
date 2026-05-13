@@ -10,6 +10,11 @@ import (
 )
 
 func SetupRoutes(r *mux.Router) {
+	// Global OPTIONS handler for CORS preflight
+	r.PathPrefix("/api/v1").Methods("OPTIONS").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// No body needed; CORSMiddleware will set appropriate headers
+		w.WriteHeader(http.StatusOK)
+	})
 	api := r.PathPrefix("/api/v1").Subrouter()
 
 	// API Documentation
@@ -21,6 +26,9 @@ func SetupRoutes(r *mux.Router) {
 
 	// Health check
 	api.HandleFunc("/health", handlers.Adapter(handlers.HealthHandler)).Methods("GET")
+
+	// Version check
+	api.HandleFunc("/version", handlers.Adapter(handlers.VersionHandler)).Methods("GET")
 
 	// Auth routes
 	auth := api.PathPrefix("/auth").Subrouter()

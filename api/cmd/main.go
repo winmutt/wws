@@ -45,6 +45,10 @@ func main() {
 	// Initialize audit log handler
 	handlers.AuditLogHandlerInstance = &handlers.AuditLogHandler{DB: db.DB}
 
+	// Initialize OAuth state store
+	handlers.InitOAuthStateStore()
+	handlers.SetOAuthDB(db.DB)
+
 	// Initialize quota handler
 	handlers.QuotaHandlerInstance = &handlers.QuotaHandler{DB: db.DB}
 
@@ -67,11 +71,13 @@ func main() {
 
 	routes.SetupRoutes(r)
 
-	r.Use(middleware.CORSMiddleware(config.Server.CORS.Origins))
 	r.Use(middleware.Logging)
 	r.Use(middleware.Recovery)
 	r.Use(middleware.RateLimitMiddleware(middleware.DefaultRateLimitConfig()))
 	r.Use(middleware.AuditMiddleware(db.DB))
+
+	// Wrap router with CORS middleware before passing to server so OPTIONS is handled even for unmapped routes
+	corsHandler := middleware.CORSMiddleware(config.Server.CORS.Origins)(r)
 
 	httpPort := os.Getenv("PORT")
 	if httpPort == "" {
@@ -86,7 +92,7 @@ func main() {
 	// Create HTTP server
 	httpServer := &http.Server{
 		Addr:    fmt.Sprintf(":%s", httpPort),
-		Handler: r,
+		Handler: corsHandler,
 	}
 
 	// Start gRPC server in background

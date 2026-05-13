@@ -3,6 +3,7 @@ package handlers
 import (
 	"fmt"
 	"net/http"
+	"os"
 )
 
 func GitHubAuthHandler(w http.ResponseWriter, r *http.Request) error {
@@ -10,6 +11,21 @@ func GitHubAuthHandler(w http.ResponseWriter, r *http.Request) error {
 	if config == nil {
 		return fmt.Errorf("GitHub OAuth not configured")
 	}
+
+	host := r.Host
+	scheme := "http"
+	if forwardedProto := r.Header.Get("X-Forwarded-Proto"); forwardedProto != "" {
+		scheme = forwardedProto
+	} else if r.TLS != nil {
+		scheme = "https"
+	}
+
+	callbackURL := os.Getenv("GITHUB_CALLBACK_URL")
+	if callbackURL == "" {
+		callbackURL = fmt.Sprintf("%s://%s/api/v1/auth/github/callback", scheme, host)
+	}
+
+	config.RedirectURL = callbackURL
 
 	state, err := generateStateToken()
 	if err != nil {
@@ -26,5 +42,5 @@ func GitHubAuthHandler(w http.ResponseWriter, r *http.Request) error {
 }
 
 func GitHubCallbackHandler(w http.ResponseWriter, r *http.Request) error {
-	return WriteJSON(w, http.StatusOK, map[string]string{"message": "GitHub callback endpoint"})
+	return OAuthCallbackHandler(w, r)
 }
