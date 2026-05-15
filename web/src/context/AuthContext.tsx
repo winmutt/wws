@@ -24,19 +24,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const session = await auth.getSession();
       if (session) {
+        const userData = await auth.getCurrentUser();
         setIsAuthenticated(true);
-        // Fetch user details if needed
+        setUser(userData);
       }
     } catch (error) {
       console.error('Auth check failed:', error);
       setIsAuthenticated(false);
+      setUser(null);
     } finally {
       setIsLoading(false);
     }
   };
 
   const login = () => {
-    const apiUrl = process.env.REACT_APP_API_URL || `${window.location.origin.replace(':3000', ':8080')}`;
+    const currentPort = window.location.port || '3000';
+    const apiPort = currentPort === '3000' ? '8080' : currentPort === '80' ? '8080' : currentPort;
+    const apiUrl = `${window.location.protocol}//${window.location.hostname}:${apiPort}`;
     window.location.href = `${apiUrl}/api/v1/auth/github`;
   };
 

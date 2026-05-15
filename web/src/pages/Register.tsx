@@ -13,8 +13,8 @@ function Register() {
   }, [isAuthenticated, navigate]);
 
   const handleLogin = () => {
-    const apiBaseUrl = process.env.REACT_APP_API_URL || 'http://localhost:8080';
-    window.location.href = `${apiBaseUrl}/api/v1/auth/github`;
+    const apiBaseUrl = process.env.REACT_APP_API_URL || 'http://localhost:8080/api/v1';
+    window.location.href = `${apiBaseUrl}/auth/github`;
   };
 
   if (isAuthenticated) {

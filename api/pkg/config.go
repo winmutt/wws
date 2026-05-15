@@ -3,6 +3,7 @@ package pkg
 import (
 	"fmt"
 	"os"
+	"strings"
 )
 
 type Config struct {
@@ -43,7 +44,7 @@ func LoadConfig() (*Config, error) {
 		Server: ServerConfig{
 			Port: getEnv("PORT", "8080"),
 			CORS: CORSConfig{
-				Origins: []string{"http://localhost:3000"},
+				Origins: strings.Split(getEnv("CORS_ORIGINS", "http://localhost:3000"), ","),
 			},
 		},
 		Database: DatabaseConfig{
@@ -52,7 +53,7 @@ func LoadConfig() (*Config, error) {
 		GitHub: GitHubConfig{
 			ClientID:     getEnv("GITHUB_CLIENT_ID", ""),
 			ClientSecret: getEnv("GITHUB_CLIENT_SECRET", ""),
-			CallbackURL:  getEnv("GITHUB_CALLBACK_URL", "http://localhost:8080/oauth/callback"),
+			CallbackURL:  getEnv("GITHUB_CALLBACK_URL", "http://localhost:8080/api/v1/auth/github/callback"),
 		},
 		Workspaces: WorkspaceConfig{
 			IdleTimeoutHours: 6,

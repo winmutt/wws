@@ -18,6 +18,7 @@ function CreateWorkspaceForm({ organizationId, onSubmit, onCancel }: CreateWorks
   const [provider, setProvider] = useState('podman');
   const [region, setRegion] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState('');
   const [config, setConfig] = useState<WorkspaceConfig>({
     cpu: 2,
     memory: 4,
@@ -27,6 +28,7 @@ function CreateWorkspaceForm({ organizationId, onSubmit, onCancel }: CreateWorks
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
+    setError('');
 
     try {
       await workspaces.create({
@@ -37,9 +39,10 @@ function CreateWorkspaceForm({ organizationId, onSubmit, onCancel }: CreateWorks
         config,
       });
       onSubmit();
-    } catch (error) {
-      console.error('Failed to create workspace:', error);
-      alert('Failed to create workspace');
+    } catch (err: any) {
+      const errorMessage = err?.message || 'Failed to create workspace. Please try again.';
+      setError(errorMessage);
+      console.error('[DEBUG] Workspace creation failed:', errorMessage, err);
       setIsSubmitting(false);
     }
   };
@@ -48,6 +51,13 @@ function CreateWorkspaceForm({ organizationId, onSubmit, onCancel }: CreateWorks
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
       <div className="bg-white rounded-lg p-6 w-full max-w-md">
         <h2 className="text-2xl font-bold mb-4">Create Workspace</h2>
+        
+        {error && (
+          <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+            <p className="font-medium">Error</p>
+            <p className="text-sm">{error}</p>
+          </div>
+        )}
         
         <form onSubmit={handleSubmit}>
           <div className="mb-4">

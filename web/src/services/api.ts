@@ -31,6 +31,18 @@ const fetchWithAuth = async (url: string, options?: RequestInit): Promise<Respon
   return fetch(url, { ...options, headers });
 };
 
+const logError = (method: string, endpoint: string, status: number, error: any) => {
+  const debug = process.env.REACT_APP_DEBUG === '1' || window.location.search.includes('DEBUG=1');
+  const message = error?.message || error?.error || 'Unknown error';
+  const fullError = `${method} ${endpoint} - ${status}: ${message}`;
+  
+  if (debug) {
+    console.error('[DEBUG]', fullError, error);
+  }
+  
+  return message;
+};
+
 const request = async (method: string, endpoint: string, data?: any): Promise<any> => {
   const url = `${API_BASE}${endpoint}`;
   const headers = getAuthHeaders();
@@ -49,8 +61,37 @@ const request = async (method: string, endpoint: string, data?: any): Promise<an
   const response = await fetch(url, init);
   
   if (!response.ok) {
-    const error = await response.json().catch(() => ({}));
-    throw new Error(error.message || `Request failed with status ${response.status}`);
+    let errorData: any = {};
+    let errorMessage: string;
+    let rawError: string = '';
+    
+    try {
+      rawError = await response.text();
+      try {
+        errorData = JSON.parse(rawError);
+      } catch {
+        errorData = { message: rawError };
+      }
+    } catch {
+      errorData = { message: 'Unknown error' };
+    }
+    
+    errorMessage = errorData.message || errorData.error || rawError || `Request failed with status ${response.status}`;
+    
+    if (errorMessage === 'Unauthorized' || errorMessage.includes('Unauthorized')) {
+      errorMessage = 'Authentication required. Please log in again.';
+    } else if (errorMessage === 'missing session token') {
+      errorMessage = 'Session expired. Please log in again.';
+    } else if (errorMessage === 'owner_id is required') {
+      errorMessage = 'Organization owner is required. Please contact your administrator.';
+    } else if (errorMessage === 'organization_id parameter is required') {
+      errorMessage = 'Organization ID is required.';
+    } else if (errorMessage === 'Failed to create workspace') {
+      errorMessage = 'Failed to create workspace. Please check your input and try again.';
+    }
+    
+    logError(method, endpoint, response.status, errorData);
+    throw new Error(errorMessage);
   }
   
   return response.json();
@@ -194,7 +235,12 @@ const users = {
 
 const organizations = {
   async list(): Promise<Organization[]> {
-    return request('GET', '/organizations');
+    try {
+      return await request('GET', '/organizations');
+    } catch (error) {
+      console.error('Failed to list organizations:', error);
+      return [];
+    }
   },
 
   async create(name: string): Promise<Organization> {
@@ -226,15 +272,21 @@ const invitations = {
 
 const workspaces = {
   async list(orgId: number): Promise<Workspace[]> {
-    const response = await fetch(`${API_BASE}/workspaces?organization_id=${orgId}`, {
-      credentials: 'include',
-    });
-    
-    if (!response.ok) {
-      throw new Error('Failed to fetch workspaces');
+    try {
+      const response = await fetch(`${API_BASE}/workspaces?organization_id=${orgId}`, {
+        credentials: 'include',
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch workspaces');
+      }
+      
+      const data = await response.json();
+      return data || [];
+    } catch (error) {
+      console.error('Failed to list workspaces:', error);
+      return [];
     }
-    
-    return response.json();
   },
 
   async get(id: number): Promise<Workspace> {
@@ -250,18 +302,7 @@ const workspaces = {
   },
 
   async create(data: { name: string; organization_id: number; provider?: string; region?: string; config?: any }): Promise<Workspace> {
-    const response = await fetch(`${API_BASE}/workspaces`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-      credentials: 'include',
-    });
-    
-    if (!response.ok) {
-      throw new Error('Failed to create workspace');
-    }
-    
-    return response.json();
+    return request('POST', '/workspaces', data);
   },
 
   async update(id: number, data: Partial<Workspace>): Promise<Workspace> {

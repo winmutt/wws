@@ -313,3 +313,53 @@ func getMemberByUserAndOrg(ctx context.Context, userID, orgID int) (*Member, err
 func GetMemberByUserAndOrg(ctx context.Context, userID, orgID int) (*Member, error) {
 	return getMemberByUserAndOrg(ctx, userID, orgID)
 }
+
+func ListInvitationsHandler(w http.ResponseWriter, r *http.Request) error {
+	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
+	defer cancel()
+
+	orgIDStr := r.URL.Query().Get("organization_id")
+	if orgIDStr == "" {
+		return fmt.Errorf("organization_id query parameter is required")
+	}
+
+	var orgID int
+	_, err := fmt.Sscanf(orgIDStr, "%d", &orgID)
+	if err != nil || orgID <= 0 {
+		return fmt.Errorf("invalid organization_id")
+	}
+
+	rows, err := db.DB.QueryContext(ctx,
+		`SELECT id, organization_id, email, token, status, created_by, accepted_by, created_at, expires_at
+		 FROM invitations WHERE organization_id = ? ORDER BY created_at DESC`,
+		orgID,
+	)
+	if err != nil {
+		return fmt.Errorf("failed to list invitations: %w", err)
+	}
+	defer rows.Close()
+
+	var invitations []Invitation
+	for rows.Next() {
+		var invitation Invitation
+		var acceptedBy sql.NullInt64
+
+		err := rows.Scan(
+			&invitation.ID, &invitation.OrganizationID, &invitation.Email,
+			&invitation.Token, &invitation.Status, &invitation.CreatedByID,
+			&acceptedBy, &invitation.CreatedAt, &invitation.ExpiresAt,
+		)
+		if err != nil {
+			return fmt.Errorf("failed to scan invitation: %w", err)
+		}
+
+		invitation.AcceptedBy = acceptedBy
+		invitations = append(invitations, invitation)
+	}
+
+	if err := rows.Err(); err != nil {
+		return fmt.Errorf("error iterating invitations: %w", err)
+	}
+
+	return WriteJSON(w, http.StatusOK, invitations)
+}

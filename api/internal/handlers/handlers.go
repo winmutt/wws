@@ -22,7 +22,12 @@ func WriteJSON(w http.ResponseWriter, status int, data interface{}) error {
 
 func WriteError(w http.ResponseWriter, status int, err error) {
 	log.Printf("Error: %v", err)
-	http.Error(w, err.Error(), status)
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(status)
+	json.NewEncoder(w).Encode(map[string]string{
+		"error":   err.Error(),
+		"message": err.Error(),
+	})
 }
 
 func Adapter(h Handler) http.HandlerFunc {

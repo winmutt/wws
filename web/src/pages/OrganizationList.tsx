@@ -105,7 +105,7 @@ function OrganizationList() {
   const getOrganizationInvites = async (orgId: number): Promise<Invitation[]> => {
     try {
       const response = await fetch(
-        `${process.env.REACT_APP_API_URL || 'http://localhost:8080'}/api/v1/organizations/invitations?organization_id=${orgId}`,
+        `${process.env.REACT_APP_API_URL || 'http://localhost:8080/api/v1'}/organizations/invitations?organization_id=${orgId}`,
         { credentials: 'include' }
       );
       if (!response.ok) return [];
@@ -141,10 +141,10 @@ function OrganizationList() {
       return;
     }
     try {
-      const response = await fetch(
-        `${process.env.REACT_APP_API_URL || 'http://localhost:8080'}/api/v1/organizations/${selectedOrg.id}`,
-        { method: 'DELETE', credentials: 'include' }
-      );
+const response = await fetch(
+         `${process.env.REACT_APP_API_URL || 'http://localhost:8080/api/v1'}/organizations/${selectedOrg.id}`,
+         { method: 'DELETE', credentials: 'include' }
+       );
       if (!response.ok) throw new Error('Failed to delete');
       setOrgs(orgs.filter((o) => o.id !== selectedOrg.id));
       setSelectedOrg(null);
@@ -179,10 +179,10 @@ function OrganizationList() {
   const handleRevokeInvitation = async (inviteId: number) => {
     if (!selectedOrg) return;
     try {
-      const response = await fetch(
-        `${process.env.REACT_APP_API_URL || 'http://localhost:8080'}/api/v1/organizations/invitations?invite_id=${inviteId}`,
-        { method: 'DELETE', credentials: 'include' }
-      );
+const response = await fetch(
+         `${process.env.REACT_APP_API_URL || 'http://localhost:8080/api/v1'}/organizations/invitations?invite_id=${inviteId}`,
+         { method: 'DELETE', credentials: 'include' }
+       );
       if (!response.ok) throw new Error('Failed to revoke');
       setSuccess('Invitation revoked');
       loadOrgDetails(selectedOrg.id);
