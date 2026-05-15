@@ -53,7 +53,7 @@ func SetupRoutes(r *mux.Router) {
 	orgs.HandleFunc("", handlers.Adapter(handlers.ListOrganizationsHandler)).Methods("GET")
 	orgs.HandleFunc("", handlers.Adapter(handlers.CreateOrganizationHandler)).Methods("POST")
 
-	// Organization member routes
+	// Organization member routes (before {id} route)
 	orgs.HandleFunc("/members", handlers.Adapter(handlers.ListMembersHandler)).Methods("GET")
 	orgs.HandleFunc("/members", handlers.Adapter(handlers.GetMemberHandler)).Methods("GET")
 	orgs.HandleFunc("/members", handlers.Adapter(handlers.RemoveMemberHandler)).Methods("DELETE")
@@ -61,9 +61,15 @@ func SetupRoutes(r *mux.Router) {
 	// Organization role routes
 	orgs.HandleFunc("/roles", handlers.Adapter(handlers.AssignRoleHandler)).Methods("POST")
 
-	// Invitation routes
+	// Invitation routes (before {id} route)
+	orgs.HandleFunc("/invitations", handlers.Adapter(handlers.ListInvitationsHandler)).Methods("GET")
 	orgs.HandleFunc("/invitations", handlers.Adapter(handlers.CreateInvitationHandler)).Methods("POST")
 	orgs.HandleFunc("/invitations/accept", handlers.Adapter(handlers.AcceptInvitationHandler)).Methods("POST")
+
+	// Organization ID routes (must be last)
+	orgs.HandleFunc("/{id}", handlers.Adapter(handlers.GetOrganizationHandler)).Methods("GET")
+	orgs.HandleFunc("/{id}", handlers.Adapter(handlers.UpdateOrganizationHandler)).Methods("PUT")
+	orgs.HandleFunc("/{id}", handlers.Adapter(handlers.DeleteOrganizationHandler)).Methods("DELETE")
 
 	// Workspace routes
 	workspaces := api.PathPrefix("/workspaces").Subrouter()

@@ -2,12 +2,15 @@ package handlers
 
 import (
 	"context"
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"net/http"
 	"time"
 
 	"wws/api/internal/db"
+
+	"github.com/gorilla/mux"
 )
 
 type CreateOrganizationRequest struct {
@@ -108,16 +111,111 @@ func CreateOrganizationHandler(w http.ResponseWriter, r *http.Request) error {
 }
 
 func GetOrganizationHandler(w http.ResponseWriter, r *http.Request) error {
-	WriteJSON(w, http.StatusOK, map[string]string{"message": "Get organization"})
-	return nil
+	ctx, cancel := context.WithTimeout(r.Context(), 30*time.Second)
+	defer cancel()
+
+	idStr := mux.Vars(r)["id"]
+	if idStr == "" {
+		return fmt.Errorf("organization id is required")
+	}
+
+	var id int
+	_, err := fmt.Sscanf(idStr, "%d", &id)
+	if err != nil || id <= 0 {
+		return fmt.Errorf("invalid organization id")
+	}
+
+	var orgID, ownerID int
+	var name string
+	var createdAt, updatedAt time.Time
+	err = db.DB.QueryRowContext(ctx,
+		`SELECT id, name, owner_id, created_at, updated_at FROM organizations WHERE id = ?`,
+		id,
+	).Scan(&orgID, &name, &ownerID, &createdAt, &updatedAt)
+
+	if err == sql.ErrNoRows {
+		return fmt.Errorf("organization not found")
+	}
+	if err != nil {
+		return fmt.Errorf("failed to get organization: %w", err)
+	}
+
+	org := map[string]interface{}{
+		"id":         orgID,
+		"name":       name,
+		"owner_id":   ownerID,
+		"created_at": createdAt.Format(time.RFC3339),
+		"updated_at": updatedAt.Format(time.RFC3339),
+	}
+
+	return WriteJSON(w, http.StatusOK, org)
 }
 
 func UpdateOrganizationHandler(w http.ResponseWriter, r *http.Request) error {
-	WriteJSON(w, http.StatusOK, map[string]string{"message": "Update organization"})
-	return nil
+	ctx, cancel := context.WithTimeout(r.Context(), 30*time.Second)
+	defer cancel()
+
+	idStr := mux.Vars(r)["id"]
+	if idStr == "" {
+		return fmt.Errorf("organization id is required")
+	}
+
+	var id int
+	_, err := fmt.Sscanf(idStr, "%d", &id)
+	if err != nil || id <= 0 {
+		return fmt.Errorf("invalid organization id")
+	}
+
+	var req struct {
+		Name string `json:"name"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		return fmt.Errorf("invalid request body")
+	}
+
+	if req.Name == "" {
+		return fmt.Errorf("name is required")
+	}
+
+	_, err = db.DB.ExecContext(ctx,
+		`UPDATE organizations SET name = ?, updated_at = ? WHERE id = ?`,
+		req.Name, time.Now(), id,
+	)
+	if err != nil {
+		return fmt.Errorf("failed to update organization: %w", err)
+	}
+
+	org := map[string]interface{}{
+		"id":         id,
+		"name":       req.Name,
+		"updated_at": time.Now().Format(time.RFC3339),
+	}
+
+	return WriteJSON(w, http.StatusOK, org)
 }
 
 func DeleteOrganizationHandler(w http.ResponseWriter, r *http.Request) error {
-	WriteJSON(w, http.StatusOK, map[string]string{"message": "Delete organization"})
-	return nil
+	ctx, cancel := context.WithTimeout(r.Context(), 30*time.Second)
+	defer cancel()
+
+	idStr := mux.Vars(r)["id"]
+	if idStr == "" {
+		return fmt.Errorf("organization id is required")
+	}
+
+	var id int
+	_, err := fmt.Sscanf(idStr, "%d", &id)
+	if err != nil || id <= 0 {
+		return fmt.Errorf("invalid organization id")
+	}
+
+	_, err = db.DB.ExecContext(ctx,
+		`DELETE FROM organizations WHERE id = ?`,
+		id,
+	)
+	if err != nil {
+		return fmt.Errorf("failed to delete organization: %w", err)
+	}
+
+	return WriteJSON(w, http.StatusOK, map[string]string{"message": "Organization deleted"})
 }

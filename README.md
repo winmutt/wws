@@ -88,127 +88,122 @@ wws/
 | Layer | Technology |
 |-------|-----------|
 | Backend | Go (net/http, gin) |
-| Frontend | React (Create React App) |
+| Frontend | React (Create React App) + Tailwind CSS |
 | Database | SQLite (MVP) |
-| Container | Podman |
+| Container | Podman / Docker |
 | VM | KVM/QEMU |
 | Shell | Zsh |
 | Dotfiles | yadm |
 | Editor | code-server (VSCode) |
 | Authentication | GitHub OAuth2 |
+| CSS | Tailwind CSS + PostCSS + Autoprefixer |
 
 ## Getting Started
 
 ### Prerequisites
 
-- Go 1.21+
-- Node.js 18+
-- Podman (or Docker)
-- KVM support (Linux kernel with KVM module)
-- GitHub OAuth App
+- Docker or Podman (version 4.0+)
+- Docker Compose or Podman Compose
+- KVM support (Linux kernel with KVM module) - optional for container-only mode
+- GitHub OAuth App (create at https://github.com/settings/developers)
+- Node.js 18+ (for local development only)
 
-### Development Setup
+### Quick Start with Docker/Podman Compose
 
-**Option 1: Docker/Podman Compose (Recommended)**
+**Step 1: Clone and Configure**
 
 ```bash
 # Clone repository
 git clone https://github.com/yourorg/wws.git
 cd wws
 
-# Configure environment
-cp .env.example .env
-# Edit .env with your GitHub OAuth credentials
+# Configure environment variables (required for Docker/Podman)
+export GITHUB_CLIENT_ID=your_github_client_id
+export GITHUB_CLIENT_SECRET=your_github_client_secret
+export GITHUB_CALLBACK_URL=http://localhost:8080/oauth/callback
+export CORS_ORIGINS=http://localhost:3000,http://127.0.0.1:3000
+export DATABASE_PATH=/data/wws.db
+export STORAGE_PATH=/data
 
-# Build and start services
+# Create data directory
+mkdir -p data
+```
+
+**Step 2: Build and Start Services**
+
+**Using Docker:**
+```bash
+# Build and start all services
+docker-compose build
+docker-compose up -d
+
+# View logs
+docker-compose logs -f
+
+# Stop services
+docker-compose down
+```
+
+**Using Podman:**
+```bash
+# Build and start all services
+podman compose build
 podman compose up -d
 
 # View logs
 podman compose logs -f
 
-# Access application
-# Frontend: http://localhost:3000
-# Backend API: http://localhost:8080
-
 # Stop services
 podman compose down
-```
-
-**Option 2: Running Pre-built Docker Images**
-
-```bash
-# Build images locally
-podman build -t wws-api -f api/Dockerfile .
-podman build -t wws-web -f web/Dockerfile .
-
-# Create data directory
-mkdir -p data
-
-# Run API container
-podman run -d \
-  --name wws-api \
-  -p 8080:8080 \
-  -e GITHUB_CLIENT_ID=your_client_id \
-  -e GITHUB_CLIENT_SECRET=your_client_secret \
-  -e GITHUB_CALLBACK_URL=http://localhost:8080/oauth/callback \
-  -v $(pwd)/data:/data \
-  wws-api
-
-# Run Web container (note: Podman doesn't need --link)
-podman run -d \
-  --name wws-web \
-  -p 3000:80 \
-  wws-web
-
-# View logs
-podman logs -f wws-api
-podman logs -f wws-web
-
-# Stop containers
-podman stop wws-api wws-web
-podman rm wws-api wws-web
 ```
 
 **Access the application:**
 - Frontend: http://localhost:3000
 - Backend API: http://localhost:8080
 
-**Option 3: Local Development**
+### Important Notes
 
-**Option 2: Local Development**
+**Tailwind CSS Build Requirements:**
+The frontend requires proper PostCSS configuration for Tailwind CSS to work. Required files:
+- `postcss.config.js` - PostCSS configuration with Tailwind and Autoprefixer
+- `tailwind.config.js` - Tailwind configuration
+- `index.css` - Must be imported in `index.tsx` with `import './index.css'`
 
+**Custom API URL:**
+When building the web container, specify the API URL:
 ```bash
-# Clone repository
-git clone https://github.com/yourorg/wws.git
-cd wws
-
-# Backend
-cd api
-go mod download
-go run cmd/main.go
-
-# Frontend (in new terminal)
-cd web
-npm install
-npm start
+podman build --build-arg REACT_APP_API_URL=http://your-server:8080/api/v1 -t wws-web -f web/Dockerfile web
 ```
 
 ### Configuration
 
-**Option 1: Environment Variables (Recommended for Docker/Podman)**
+**Environment Variables (Required for Docker/Podman):**
 
-Copy `.env.example` to `.env`:
+Set these before running containers:
 ```bash
-cp .env.example .env
+# GitHub OAuth (required)
+export GITHUB_CLIENT_ID=your_github_client_id
+export GITHUB_CLIENT_SECRET=your_github_client_secret
+export GITHUB_CALLBACK_URL=http://your-server:8080/oauth/callback
+
+# CORS origins (comma-separated)
+export CORS_ORIGINS=http://your-server:3000,http://localhost:3000
+
+# Database and storage paths
+export DATABASE_PATH=/data/wws.db
+export STORAGE_PATH=/data
+
+# Optional: Workspace defaults
+export WORKSPACE_IDLE_TIMEOUT_HOURS=6
+export WORKSPACE_DEFAULT_STORAGE_GB=20
+export WORKSPACE_DEFAULT_CPU=2
+export WORKSPACE_DEFAULT_MEMORY_GB=4
+
+# Frontend API URL (for web container build)
+export REACT_APP_API_URL=http://your-server:8080/api/v1
 ```
 
-Edit `.env` and set your GitHub OAuth credentials:
-```bash
-GITHUB_CLIENT_ID=your_github_client_id
-GITHUB_CLIENT_SECRET=your_github_client_secret
-GITHUB_CALLBACK_URL=http://localhost:8080/oauth/callback
-CORS_ORIGINS=http://localhost:3000,http://127.0.0.1:3000
-```
+**Note:** Create a GitHub OAuth application at https://github.com/settings/developers and set the callback URL to `http://your-server:8080/oauth/callback`.
 
 **Option 2: Config File (For local development)**
 
@@ -253,6 +248,23 @@ workspaces:
 3. **Monitor** - View workspace usage, resource consumption
 4. **Configure** - Set idle timeouts, quotas, templates
 5. **Audit** - Review action logs
+
+## Troubleshooting
+
+**Frontend shows no styles:**
+- Ensure `postcss.config.js` exists with Tailwind and Autoprefixer plugins
+- Verify `tailwind.config.js` is configured
+- Check that `index.css` is imported in `index.tsx`
+- Rebuild the web container after fixing configuration files
+
+**API fails to start:**
+- Verify all required environment variables are set
+- Check that `/data` directory exists and is writable
+- Ensure port 8080 is not in use
+
+**Database errors:**
+- Ensure `DATABASE_PATH` environment variable is set correctly
+- Check volume mount permissions for data directory
 
 ## Security Considerations
 

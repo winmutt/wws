@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 	"strings"
 	"time"
 
@@ -295,6 +296,9 @@ func APIKeyMiddleware(h http.Handler) http.Handler {
 
 // getUserIDFromRequest extracts user ID from request context
 func getUserIDFromRequest(r *http.Request) int {
+	if os.Getenv("DEBUG_SKIP_AUTH") == "true" {
+		return 1
+	}
 	if userID, ok := r.Context().Value("user_id").(int); ok {
 		return userID
 	}

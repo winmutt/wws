@@ -101,18 +101,25 @@ wws/
 git clone https://github.com/winmutt/wws.git
 cd wws
 
+# Configure environment (see README.md for required variables)
+export GITHUB_CLIENT_ID=your_github_client_id
+export GITHUB_CLIENT_SECRET=your_github_client_secret
+export GITHUB_CALLBACK_URL=http://localhost:8080/oauth/callback
+export CORS_ORIGINS=http://localhost:3000,http://127.0.0.1:3000
+
 # Create new feature branch
 git checkout main
 git pull origin main
 git checkout -b feature/auth/1.2.1
 
-# Run tests
-go test ./api/... -v
-cd web && npm test
+# Build and run with Docker
+docker-compose build && docker-compose up -d
 
-# Build
-go build ./api
-cd web && npm run build
+# Build and run with Podman
+podman compose build && podman compose up -d
+
+# Run tests inside container
+docker-compose exec api go test ./... -v
 ```
 
 ## Code Review Checklist
@@ -135,17 +142,24 @@ cd web && npm run build
 
 ## Docker & Podman Development
 
-### Building and Running Locally
+### Building and Running with Compose
 
+**Using Docker:**
 ```bash
-# Build the backend
-podman build -f api/Dockerfile -t wws-api .
+# Build and start services
+docker-compose build && docker-compose up -d
 
-# Build the frontend
-podman build -f web/Dockerfile -t wws-web .
+# View logs
+docker-compose logs -f
 
-# Run with podman compose
-podman compose up -d
+# Stop services
+docker-compose down
+```
+
+**Using Podman:**
+```bash
+# Build and start services
+podman compose build && podman compose up -d
 
 # View logs
 podman compose logs -f
@@ -180,6 +194,10 @@ wws/
 ├── docker-compose.yml
 └── AGENTS.md         # This file
 ```
+
+### Environment Variables
+
+See [README.md - Getting Started](../README.md#quick-start-with-dockerpodman-compose) for required environment variables and configuration instructions.
 
 ### Container Orchestration Roadmap
 

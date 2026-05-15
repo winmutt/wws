@@ -5,11 +5,11 @@ WORKDIR /build
 RUN apk add --no-cache gcc musl-dev
 
 # Copy go.mod and go.sum first for better caching
-COPY api/go.mod api/go.sum ./
+COPY go.mod go.sum ./
 RUN go mod download
 
 # Copy rest of source code
-COPY api/ ./
+COPY . ./
 
 # Build the application with CGO enabled for SQLite
 RUN CGO_ENABLED=1 GOOS=linux go build -v -o main ./cmd
