@@ -6,6 +6,10 @@ A remote workspace provisioning system for engineering organizations. Spin up is
 
 WWS enables engineering teams to create, manage, and destroy isolated development workspaces for ticket-based development workflows. Each workspace is a self-contained environment with persistent storage, pre-configured language tooling, and remote editing capabilities.
 
+## Dashboard Screenshot
+
+![WWS Dashboard](docs/screenshots/dashboard.png)
+
 ## Key Features
 
 - **Isolated Workspaces** - KVM/Podman-based environments with resource quotas
