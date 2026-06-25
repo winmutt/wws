@@ -66,7 +66,6 @@ var ExportWorkspaceHandler Handler = func(w http.ResponseWriter, r *http.Request
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return nil
 	}
-	
 
 	workspaceID := r.URL.Query().Get("workspace_id")
 	if workspaceID == "" {
@@ -319,7 +318,6 @@ var ImportWorkspaceHandler Handler = func(w http.ResponseWriter, r *http.Request
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return nil
 	}
-	
 
 	// Parse request body
 	var req ImportRequest
@@ -580,7 +578,6 @@ var ListExportsHandler Handler = func(w http.ResponseWriter, r *http.Request) er
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return nil
 	}
-	
 
 	rows, err := db.DB.Query(
 		`SELECT id, workspace_id, export_path, export_format, file_size_mb, status, error_message, created_at, expires_at 
@@ -621,7 +618,6 @@ var ListImportsHandler Handler = func(w http.ResponseWriter, r *http.Request) er
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return nil
 	}
-	
 
 	orgIDStr := r.URL.Query().Get("organization_id")
 	if orgIDStr == "" {
@@ -676,7 +672,6 @@ var DownloadExportHandler Handler = func(w http.ResponseWriter, r *http.Request)
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return nil
 	}
-	
 
 	exportID := r.URL.Query().Get("id")
 	if exportID == "" {
@@ -736,7 +731,6 @@ var DeleteExportHandler Handler = func(w http.ResponseWriter, r *http.Request) e
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return nil
 	}
-	
 
 	exportID := r.URL.Query().Get("id")
 	if exportID == "" {

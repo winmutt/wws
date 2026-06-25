@@ -52,7 +52,7 @@ func (p *MockProvider) GetWorkspace(ctx context.Context, workspaceID string) (*p
 	if info, ok := p.workspaces[workspaceID]; ok {
 		return info, nil
 	}
-	
+
 	// Fallback to database lookup
 	if db.DB != nil {
 		var tag, name, status string
@@ -61,7 +61,7 @@ func (p *MockProvider) GetWorkspace(ctx context.Context, workspaceID string) (*p
 			"SELECT tag, name, organization_id, owner_id, status FROM workspaces WHERE tag = ? AND deleted_at IS NULL",
 			workspaceID,
 		).Scan(&tag, &name, &orgID, &ownerID, &status)
-		
+
 		if err == nil {
 			return &provider.WorkspaceInfo{
 				WorkspaceID: workspaceID,
@@ -76,7 +76,7 @@ func (p *MockProvider) GetWorkspace(ctx context.Context, workspaceID string) (*p
 			}, nil
 		}
 	}
-	
+
 	return nil, provider.ErrWorkspaceNotFound
 }
 
@@ -87,7 +87,7 @@ func (p *MockProvider) UpdateWorkspace(ctx context.Context, workspaceID string, 
 		info.UpdatedAt = time.Now().UTC().Format(time.RFC3339)
 		return info, nil
 	}
-	
+
 	// Check database
 	if db.DB != nil {
 		var tag, name string
@@ -97,7 +97,7 @@ func (p *MockProvider) UpdateWorkspace(ctx context.Context, workspaceID string, 
 			"SELECT tag, name, organization_id, owner_id, status FROM workspaces WHERE tag = ? AND deleted_at IS NULL",
 			workspaceID,
 		).Scan(&tag, &name, &orgID, &ownerID, &status)
-		
+
 		if err == nil {
 			// Update database
 			_, err := db.DB.ExecContext(ctx,
@@ -116,14 +116,14 @@ func (p *MockProvider) UpdateWorkspace(ctx context.Context, workspaceID string, 
 			}
 		}
 	}
-	
+
 	return nil, provider.ErrWorkspaceNotFound
 }
 
 // DeleteWorkspace removes mock workspace
 func (p *MockProvider) DeleteWorkspace(ctx context.Context, workspaceID string) error {
 	delete(p.workspaces, workspaceID)
-	
+
 	// Also soft delete from database
 	if db.DB != nil {
 		_, err := db.DB.ExecContext(ctx,
@@ -141,7 +141,7 @@ func (p *MockProvider) StartWorkspace(ctx context.Context, workspaceID string) (
 		info.Status = "running"
 		return info, nil
 	}
-	
+
 	// Check database
 	if db.DB != nil {
 		var tag, name string
@@ -150,7 +150,7 @@ func (p *MockProvider) StartWorkspace(ctx context.Context, workspaceID string) (
 			"SELECT tag, name, organization_id, owner_id FROM workspaces WHERE tag = ? AND deleted_at IS NULL",
 			workspaceID,
 		).Scan(&tag, &name, &orgID, &ownerID)
-		
+
 		if err == nil {
 			_, err := db.DB.ExecContext(ctx,
 				"UPDATE workspaces SET status = 'running', updated_at = datetime('now') WHERE tag = ?",
@@ -167,7 +167,7 @@ func (p *MockProvider) StartWorkspace(ctx context.Context, workspaceID string) (
 			}
 		}
 	}
-	
+
 	return nil, provider.ErrWorkspaceNotFound
 }
 
@@ -177,7 +177,7 @@ func (p *MockProvider) StopWorkspace(ctx context.Context, workspaceID string) (*
 		info.Status = "stopped"
 		return info, nil
 	}
-	
+
 	// Check database
 	if db.DB != nil {
 		var tag, name string
@@ -186,7 +186,7 @@ func (p *MockProvider) StopWorkspace(ctx context.Context, workspaceID string) (*
 			"SELECT tag, name, organization_id, owner_id FROM workspaces WHERE tag = ? AND deleted_at IS NULL",
 			workspaceID,
 		).Scan(&tag, &name, &orgID, &ownerID)
-		
+
 		if err == nil {
 			_, err := db.DB.ExecContext(ctx,
 				"UPDATE workspaces SET status = 'stopped', updated_at = datetime('now') WHERE tag = ?",
@@ -203,7 +203,7 @@ func (p *MockProvider) StopWorkspace(ctx context.Context, workspaceID string) (*
 			}
 		}
 	}
-	
+
 	return nil, provider.ErrWorkspaceNotFound
 }
 
@@ -213,7 +213,7 @@ func (p *MockProvider) RestartWorkspace(ctx context.Context, workspaceID string)
 		info.Status = "running"
 		return info, nil
 	}
-	
+
 	// Check database
 	if db.DB != nil {
 		var tag, name string
@@ -222,7 +222,7 @@ func (p *MockProvider) RestartWorkspace(ctx context.Context, workspaceID string)
 			"SELECT tag, name, organization_id, owner_id FROM workspaces WHERE tag = ? AND deleted_at IS NULL",
 			workspaceID,
 		).Scan(&tag, &name, &orgID, &ownerID)
-		
+
 		if err == nil {
 			_, err := db.DB.ExecContext(ctx,
 				"UPDATE workspaces SET status = 'running', updated_at = datetime('now') WHERE tag = ?",
@@ -239,7 +239,7 @@ func (p *MockProvider) RestartWorkspace(ctx context.Context, workspaceID string)
 			}
 		}
 	}
-	
+
 	return nil, provider.ErrWorkspaceNotFound
 }
 

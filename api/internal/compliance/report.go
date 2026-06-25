@@ -538,7 +538,7 @@ func (g *ComplianceReportGenerator) GetComplianceScore(orgID *int) (float64, err
 // ListReports lists all saved compliance reports
 func (g *ComplianceReportGenerator) ListReports() ([]*ComplianceReport, error) {
 	reportDir := filepath.Join(g.storagePath, "compliance-reports")
-	
+
 	files, err := os.ReadDir(reportDir)
 	if err != nil {
 		if os.IsNotExist(err) {
