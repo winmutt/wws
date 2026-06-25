@@ -10,13 +10,13 @@ import (
 	"strings"
 	"time"
 
-	"wws/api/internal/db"
-	"wws/api/internal/models"
-	"wws/api/provisioner/podman"
-	"wws/api/provisioner/provider"
-
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
+	"wws/api/internal/db"
+	"wws/api/internal/models"
+	"wws/api/provisioner/mock"
+	"wws/api/provisioner/podman"
+	"wws/api/provisioner/provider"
 )
 
 // WorkspaceHandler handles workspace-related HTTP requests
@@ -26,6 +26,15 @@ type WorkspaceHandler struct {
 
 // NewWorkspaceHandler creates a new WorkspaceHandler
 func NewWorkspaceHandler() *WorkspaceHandler {
+	// Use mock provider in debug mode when Podman is not available
+	if os.Getenv("DEBUG_SKIP_AUTH") == "true" {
+		m := mock.NewMockProvider()
+		if m != nil {
+			return &WorkspaceHandler{
+				provider: m,
+			}
+		}
+	}
 	return &WorkspaceHandler{
 		provider: podman.NewPodmanProvider(""),
 	}
@@ -186,7 +195,7 @@ func (h *WorkspaceHandler) GetWorkspaces(w http.ResponseWriter, r *http.Request)
 	var workspaces []WorkspaceResponse
 	for rows.Next() {
 		var ws models.Workspace
-		if err := rows.Scan(&ws.ID, &ws.Tag, &ws.Name, &ws.OrganizationID, &ws.OwnerID, &ws.Provider, &ws.Status, &ws.Config, &ws.Region, &ws.CreatedAt, &ws.UpdatedAt, &ws.DeletedAt); err != nil {
+		if err := rows.Scan(&ws.ID, &ws.Tag, &ws.Name, &ws.OrganizationID, &ws.OwnerID, &ws.Provider, &ws.Status, &ws.Config, &ws.Region, &ws.TemplateID, &ws.CreatedAt, &ws.UpdatedAt, &ws.DeletedAt); err != nil {
 			log.Printf("Failed to scan workspace: %v", err)
 			continue
 		}
@@ -219,7 +228,7 @@ func (h *WorkspaceHandler) GetWorkspace(w http.ResponseWriter, r *http.Request) 
 	err := db.DB.QueryRow(
 		"SELECT * FROM workspaces WHERE id = ? AND deleted_at IS NULL",
 		id,
-	).Scan(&ws.ID, &ws.Tag, &ws.Name, &ws.OrganizationID, &ws.OwnerID, &ws.Provider, &ws.Status, &ws.Config, &ws.Region, &ws.CreatedAt, &ws.UpdatedAt, &ws.DeletedAt)
+	).Scan(&ws.ID, &ws.Tag, &ws.Name, &ws.OrganizationID, &ws.OwnerID, &ws.Provider, &ws.Status, &ws.Config, &ws.Region, &ws.TemplateID, &ws.CreatedAt, &ws.UpdatedAt, &ws.DeletedAt)
 
 	if err == sql.ErrNoRows {
 		http.Error(w, "Workspace not found", http.StatusNotFound)
@@ -264,7 +273,7 @@ func (h *WorkspaceHandler) UpdateWorkspace(w http.ResponseWriter, r *http.Reques
 	err := db.DB.QueryRow(
 		"SELECT * FROM workspaces WHERE id = ? AND deleted_at IS NULL",
 		id,
-	).Scan(&ws.ID, &ws.Tag, &ws.Name, &ws.OrganizationID, &ws.OwnerID, &ws.Provider, &ws.Status, &ws.Config, &ws.Region, &ws.CreatedAt, &ws.UpdatedAt, &ws.DeletedAt)
+	).Scan(&ws.ID, &ws.Tag, &ws.Name, &ws.OrganizationID, &ws.OwnerID, &ws.Provider, &ws.Status, &ws.Config, &ws.Region, &ws.TemplateID, &ws.CreatedAt, &ws.UpdatedAt, &ws.DeletedAt)
 
 	if err == sql.ErrNoRows {
 		http.Error(w, "Workspace not found", http.StatusNotFound)
@@ -342,7 +351,7 @@ func (h *WorkspaceHandler) DeleteWorkspace(w http.ResponseWriter, r *http.Reques
 	err := db.DB.QueryRow(
 		"SELECT * FROM workspaces WHERE id = ? AND deleted_at IS NULL",
 		id,
-	).Scan(&ws.ID, &ws.Tag, &ws.Name, &ws.OrganizationID, &ws.OwnerID, &ws.Provider, &ws.Status, &ws.Config, &ws.Region, &ws.CreatedAt, &ws.UpdatedAt, &ws.DeletedAt)
+	).Scan(&ws.ID, &ws.Tag, &ws.Name, &ws.OrganizationID, &ws.OwnerID, &ws.Provider, &ws.Status, &ws.Config, &ws.Region, &ws.TemplateID, &ws.CreatedAt, &ws.UpdatedAt, &ws.DeletedAt)
 
 	if err == sql.ErrNoRows {
 		http.Error(w, "Workspace not found", http.StatusNotFound)
@@ -388,7 +397,7 @@ func (h *WorkspaceHandler) StartWorkspace(w http.ResponseWriter, r *http.Request
 	err := db.DB.QueryRow(
 		"SELECT * FROM workspaces WHERE id = ? AND deleted_at IS NULL",
 		id,
-	).Scan(&ws.ID, &ws.Tag, &ws.Name, &ws.OrganizationID, &ws.OwnerID, &ws.Provider, &ws.Status, &ws.Config, &ws.Region, &ws.CreatedAt, &ws.UpdatedAt, &ws.DeletedAt)
+	).Scan(&ws.ID, &ws.Tag, &ws.Name, &ws.OrganizationID, &ws.OwnerID, &ws.Provider, &ws.Status, &ws.Config, &ws.Region, &ws.TemplateID, &ws.CreatedAt, &ws.UpdatedAt, &ws.DeletedAt)
 
 	if err == sql.ErrNoRows {
 		http.Error(w, "Workspace not found", http.StatusNotFound)
@@ -445,7 +454,7 @@ func (h *WorkspaceHandler) StopWorkspace(w http.ResponseWriter, r *http.Request)
 	err := db.DB.QueryRow(
 		"SELECT * FROM workspaces WHERE id = ? AND deleted_at IS NULL",
 		id,
-	).Scan(&ws.ID, &ws.Tag, &ws.Name, &ws.OrganizationID, &ws.OwnerID, &ws.Provider, &ws.Status, &ws.Config, &ws.Region, &ws.CreatedAt, &ws.UpdatedAt, &ws.DeletedAt)
+	).Scan(&ws.ID, &ws.Tag, &ws.Name, &ws.OrganizationID, &ws.OwnerID, &ws.Provider, &ws.Status, &ws.Config, &ws.Region, &ws.TemplateID, &ws.CreatedAt, &ws.UpdatedAt, &ws.DeletedAt)
 
 	if err == sql.ErrNoRows {
 		http.Error(w, "Workspace not found", http.StatusNotFound)
@@ -502,7 +511,7 @@ func (h *WorkspaceHandler) RestartWorkspace(w http.ResponseWriter, r *http.Reque
 	err := db.DB.QueryRow(
 		"SELECT * FROM workspaces WHERE id = ? AND deleted_at IS NULL",
 		id,
-	).Scan(&ws.ID, &ws.Tag, &ws.Name, &ws.OrganizationID, &ws.OwnerID, &ws.Provider, &ws.Status, &ws.Config, &ws.Region, &ws.CreatedAt, &ws.UpdatedAt, &ws.DeletedAt)
+	).Scan(&ws.ID, &ws.Tag, &ws.Name, &ws.OrganizationID, &ws.OwnerID, &ws.Provider, &ws.Status, &ws.Config, &ws.Region, &ws.TemplateID, &ws.CreatedAt, &ws.UpdatedAt, &ws.DeletedAt)
 
 	if err == sql.ErrNoRows {
 		http.Error(w, "Workspace not found", http.StatusNotFound)

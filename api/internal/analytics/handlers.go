@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"wws/api/internal/handlers"
@@ -183,7 +184,11 @@ func GetWorkspaceStatsHandler(w http.ResponseWriter, r *http.Request) {
 
 	stats, err := GetWorkspaceStats(ctx, workspaceID)
 	if err != nil {
-		http.Error(w, fmt.Sprintf("Failed to retrieve workspace stats: %v", err), http.StatusInternalServerError)
+		status := http.StatusInternalServerError
+		if strings.Contains(err.Error(), "workspace not found") {
+			status = http.StatusNotFound
+		}
+		http.Error(w, fmt.Sprintf("Failed to retrieve workspace stats: %v", err), status)
 		return
 	}
 

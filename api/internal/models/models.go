@@ -28,6 +28,7 @@ type Workspace struct {
 	Status         string     `db:"status" json:"status"`
 	Config         string     `db:"config" json:"config"`
 	Region         string     `db:"region" json:"region"`
+	TemplateID     *int       `db:"template_id" json:"template_id,omitempty"`
 	CreatedAt      time.Time  `db:"created_at" json:"created_at"`
 	UpdatedAt      time.Time  `db:"updated_at" json:"updated_at"`
 	DeletedAt      *time.Time `db:"deleted_at" json:"deleted_at,omitempty"`

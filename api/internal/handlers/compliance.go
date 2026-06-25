@@ -102,7 +102,22 @@ func (h *ComplianceHandler) GetReport(w http.ResponseWriter, r *http.Request) {
 	// Get report ID from URL path
 	// URL format: /api/v1/compliance/report/{report_id}
 	// This is handled by the router extracting the ID
-	http.Error(w, "Not implemented - use report ID from path", http.StatusNotImplemented)
+
+	// List available reports and find matching ID
+	reports, err := h.reportGenerator.ListReports()
+	if err != nil {
+		http.Error(w, "Failed to list reports", http.StatusInternalServerError)
+		return
+	}
+
+	for _, report := range reports {
+		if report.ID == r.URL.Query().Get("id") {
+			WriteJSON(w, http.StatusOK, report)
+			return
+		}
+	}
+
+	http.Error(w, "Report not found", http.StatusNotFound)
 }
 
 // ExportReportRequest defines the request for exporting a report

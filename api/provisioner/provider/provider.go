@@ -2,7 +2,10 @@ package provider
 
 import (
 	"context"
+	"errors"
 )
+
+var ErrWorkspaceNotFound = errors.New("workspace not found")
 
 // Provider defines the interface for workspace provisioning providers
 type Provider interface {

@@ -534,3 +534,47 @@ func (g *ComplianceReportGenerator) GetComplianceScore(orgID *int) (float64, err
 
 	return report.Summary.ComplianceScore, nil
 }
+
+// ListReports lists all saved compliance reports
+func (g *ComplianceReportGenerator) ListReports() ([]*ComplianceReport, error) {
+	reportDir := filepath.Join(g.storagePath, "compliance-reports")
+	
+	files, err := os.ReadDir(reportDir)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return []*ComplianceReport{}, nil
+		}
+		return nil, fmt.Errorf("failed to read report directory: %w", err)
+	}
+
+	var reports []*ComplianceReport
+	for _, file := range files {
+		if !file.IsDir() && filepath.Ext(file.Name()) == ".json" {
+			filePath := filepath.Join(reportDir, file.Name())
+			data, err := os.ReadFile(filePath)
+			if err != nil {
+				continue
+			}
+			var report ComplianceReport
+			if err := json.Unmarshal(data, &report); err != nil {
+				continue
+			}
+			reports = append(reports, &report)
+		}
+	}
+
+	return reports, nil
+}
+
+// GetReportByFile retrieves a specific report by its file path
+func (g *ComplianceReportGenerator) GetReportByFile(filePath string) (*ComplianceReport, error) {
+	data, err := os.ReadFile(filePath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read report: %w", err)
+	}
+	var report ComplianceReport
+	if err := json.Unmarshal(data, &report); err != nil {
+		return nil, fmt.Errorf("failed to parse report: %w", err)
+	}
+	return &report, nil
+}
