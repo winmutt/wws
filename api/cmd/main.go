@@ -73,6 +73,7 @@ func main() {
 
 	r.Use(middleware.Logging)
 	r.Use(middleware.Recovery)
+	r.Use(middleware.AuthMiddleware)
 	r.Use(middleware.RateLimitMiddleware(middleware.DefaultRateLimitConfig()))
 	r.Use(middleware.AuditMiddleware(db.DB))
 

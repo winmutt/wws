@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strings"
 
 	"wws/api/pkg"
 )
@@ -33,7 +34,23 @@ func WriteError(w http.ResponseWriter, status int, err error) {
 func Adapter(h Handler) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if err := h(w, r); err != nil {
-			WriteError(w, http.StatusInternalServerError, err)
+			status := http.StatusInternalServerError
+			errStr := strings.ToLower(err.Error())
+
+			switch {
+			case strings.Contains(errStr, "not found"):
+				status = http.StatusNotFound
+			case strings.Contains(errStr, "unauthorized") || strings.Contains(errStr, "missing session"):
+				status = http.StatusUnauthorized
+			case strings.Contains(errStr, "forbidden") || strings.Contains(errStr, "access denied") || strings.Contains(errStr, "insufficient permissions") || strings.Contains(errStr, "not a member"):
+				status = http.StatusForbidden
+			case strings.Contains(errStr, "required") || strings.Contains(errStr, "invalid") || strings.Contains(errStr, "must be") || strings.Contains(errStr, "missing") || strings.Contains(errStr, "bad request"):
+				status = http.StatusBadRequest
+			case strings.Contains(errStr, "rate limit") || strings.Contains(errStr, "too many"):
+				status = http.StatusTooManyRequests
+			}
+
+			WriteError(w, status, err)
 		}
 	}
 }

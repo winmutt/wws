@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
 	"sync"
@@ -198,6 +199,13 @@ func min(a, b float64) float64 {
 
 // RateLimitMiddleware returns a middleware that enforces rate limiting
 func RateLimitMiddleware(config RateLimitConfig) func(http.Handler) http.Handler {
+	// Skip rate limiting when DEBUG_SKIP_RATE_LIMIT is set
+	if os.Getenv("DEBUG_SKIP_RATE_LIMIT") == "true" {
+		return func(next http.Handler) http.Handler {
+			return next
+		}
+	}
+
 	limiter := NewRateLimiter(config)
 
 	return func(next http.Handler) http.Handler {

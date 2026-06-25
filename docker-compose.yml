@@ -20,6 +20,7 @@ services:
       - WORKSPACE_DEFAULT_CPU=${WORKSPACE_DEFAULT_CPU:-2}
       - WORKSPACE_DEFAULT_MEMORY_GB=${WORKSPACE_DEFAULT_MEMORY_GB:-4}
       - DEBUG_SKIP_AUTH=${DEBUG_SKIP_AUTH:-true}
+      - DEBUG_SKIP_RATE_LIMIT=true
     volumes:
       - ./data:/data
     depends_on:

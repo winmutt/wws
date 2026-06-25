@@ -61,12 +61,12 @@ type ImportResponse struct {
 
 // ExportWorkspace exports a workspace configuration and optionally data
 var ExportWorkspaceHandler Handler = func(w http.ResponseWriter, r *http.Request) error {
-	userIDVal, ok := r.Context().Value(exportUserIDKey).(int)
-	if !ok {
+	userID := getUserIDFromRequest(r)
+	if userID == 0 {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return nil
 	}
-	userID := userIDVal
+	
 
 	workspaceID := r.URL.Query().Get("workspace_id")
 	if workspaceID == "" {
@@ -314,12 +314,12 @@ func getUsernameByUserID(userID int) string {
 
 // ImportWorkspace imports a workspace from an export file
 var ImportWorkspaceHandler Handler = func(w http.ResponseWriter, r *http.Request) error {
-	userIDVal, ok := r.Context().Value(exportUserIDKey).(int)
-	if !ok {
+	userID := getUserIDFromRequest(r)
+	if userID == 0 {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return nil
 	}
-	userID := userIDVal
+	
 
 	// Parse request body
 	var req ImportRequest
@@ -575,12 +575,12 @@ var GetImportStatusHandler Handler = func(w http.ResponseWriter, r *http.Request
 
 // ListExports lists all exports for a user
 var ListExportsHandler Handler = func(w http.ResponseWriter, r *http.Request) error {
-	userIDVal, ok := r.Context().Value(exportUserIDKey).(int)
-	if !ok {
+	userID := getUserIDFromRequest(r)
+	if userID == 0 {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return nil
 	}
-	userID := userIDVal
+	
 
 	rows, err := db.DB.Query(
 		`SELECT id, workspace_id, export_path, export_format, file_size_mb, status, error_message, created_at, expires_at 
@@ -616,12 +616,12 @@ var ListExportsHandler Handler = func(w http.ResponseWriter, r *http.Request) er
 
 // ListImports lists all imports for an organization
 var ListImportsHandler Handler = func(w http.ResponseWriter, r *http.Request) error {
-	userIDVal, ok := r.Context().Value(exportUserIDKey).(int)
-	if !ok {
+	userID := getUserIDFromRequest(r)
+	if userID == 0 {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return nil
 	}
-	userID := userIDVal
+	
 
 	orgIDStr := r.URL.Query().Get("organization_id")
 	if orgIDStr == "" {
@@ -671,12 +671,12 @@ var ListImportsHandler Handler = func(w http.ResponseWriter, r *http.Request) er
 
 // DownloadExport downloads an export file
 var DownloadExportHandler Handler = func(w http.ResponseWriter, r *http.Request) error {
-	userIDVal, ok := r.Context().Value(exportUserIDKey).(int)
-	if !ok {
+	userID := getUserIDFromRequest(r)
+	if userID == 0 {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return nil
 	}
-	userID := userIDVal
+	
 
 	exportID := r.URL.Query().Get("id")
 	if exportID == "" {
@@ -731,12 +731,12 @@ var DownloadExportHandler Handler = func(w http.ResponseWriter, r *http.Request)
 
 // DeleteExport deletes an export record and file
 var DeleteExportHandler Handler = func(w http.ResponseWriter, r *http.Request) error {
-	userIDVal, ok := r.Context().Value(exportUserIDKey).(int)
-	if !ok {
+	userID := getUserIDFromRequest(r)
+	if userID == 0 {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return nil
 	}
-	userID := userIDVal
+	
 
 	exportID := r.URL.Query().Get("id")
 	if exportID == "" {

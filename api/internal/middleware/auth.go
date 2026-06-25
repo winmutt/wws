@@ -34,8 +34,29 @@ func AuthMiddleware(next http.Handler) http.Handler {
 	// If DEBUG_SKIP_AUTH is set, bypass authentication for testing
 	if os.Getenv("DEBUG_SKIP_AUTH") == "true" {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			// Set a dummy user ID for downstream handlers
-			ctx := context.WithValue(r.Context(), UserIDKey, 1)
+			ctx := r.Context()
+			ctx = context.WithValue(ctx, UserIDKey, 1)
+
+			// Also set org_id from query parameter if available
+			if _, exists := ctx.Value(OrgIDKey).(int); !exists {
+				orgIDStr := r.URL.Query().Get("organization_id")
+				if orgIDStr != "" {
+					var orgID int
+					if _, err := fmt.Sscanf(orgIDStr, "%d", &orgID); err == nil && orgID > 0 {
+						ctx = context.WithValue(ctx, OrgIDKey, orgID)
+					}
+				}
+			}
+
+			// Set a default org_id for testing if not provided
+			if _, exists := ctx.Value(OrgIDKey).(int); !exists {
+				ctx = context.WithValue(ctx, OrgIDKey, 1)
+			}
+
+			// Set user_id using string key for handlers that use string keys directly
+			ctx = context.WithValue(ctx, "user_id", 1)
+			ctx = context.WithValue(ctx, "username", "debug-user")
+
 			r = r.WithContext(ctx)
 			next.ServeHTTP(w, r)
 		})
@@ -161,8 +182,13 @@ func ExtractOrgIDFromQuery(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		orgIDStr := r.URL.Query().Get("organization_id")
 		if orgIDStr == "" {
-			http.Error(w, "Missing organization_id parameter", http.StatusBadRequest)
-			return
+			// In debug mode, default to org 1
+			if os.Getenv("DEBUG_SKIP_AUTH") == "true" {
+				orgIDStr = "1"
+			} else {
+				http.Error(w, "Missing organization_id parameter", http.StatusBadRequest)
+				return
+			}
 		}
 
 		var orgID int
@@ -177,4 +203,12 @@ func ExtractOrgIDFromQuery(next http.Handler) http.Handler {
 
 		next.ServeHTTP(w, r)
 	})
+}
+
+// BypassRoleMiddleware skips role-based access checks when DEBUG_SKIP_AUTH is enabled
+func BypassRoleMiddleware(next http.Handler) http.Handler {
+	if os.Getenv("DEBUG_SKIP_AUTH") == "true" {
+		return next
+	}
+	return RequireRole(RoleOwner, RoleAdmin, RoleMember, RoleViewer)(next)
 }

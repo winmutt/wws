@@ -156,10 +156,8 @@ func TestExportWorkspaceHandler_Unauthorized(t *testing.T) {
 	req := httptest.NewRequest("POST", "/api/v1/workspaces/export?workspace_id=1", nil)
 	rr := httptest.NewRecorder()
 
-	err := ExportWorkspaceHandler(rr, req)
-	if err != nil {
-		t.Fatalf("Handler returned error: %v", err)
-	}
+	// Use Adapter to properly handle errors
+	Adapter(ExportWorkspaceHandler)(rr, req)
 
 	if status := rr.Code; status != http.StatusUnauthorized {
 		t.Errorf("Handler returned wrong status code: got %v want %v", status, http.StatusUnauthorized)
@@ -177,10 +175,8 @@ func TestImportWorkspaceHandler_Unauthorized(t *testing.T) {
 
 	rr := httptest.NewRecorder()
 
-	err := ImportWorkspaceHandler(rr, req)
-	if err != nil {
-		t.Fatalf("Handler returned error: %v", err)
-	}
+	// Use Adapter to properly handle errors
+	Adapter(ImportWorkspaceHandler)(rr, req)
 
 	if status := rr.Code; status != http.StatusUnauthorized {
 		t.Errorf("Handler returned wrong status code: got %v want %v", status, http.StatusUnauthorized)
@@ -208,10 +204,8 @@ func TestListExportsHandler_Unauthorized(t *testing.T) {
 	req := httptest.NewRequest("GET", "/api/v1/workspaces/exports", nil)
 	rr := httptest.NewRecorder()
 
-	err := ListExportsHandler(rr, req)
-	if err != nil {
-		t.Fatalf("Handler returned error: %v", err)
-	}
+	// Use Adapter to properly handle errors
+	Adapter(ListExportsHandler)(rr, req)
 
 	if status := rr.Code; status != http.StatusUnauthorized {
 		t.Errorf("Handler returned wrong status code: got %v want %v", status, http.StatusUnauthorized)
@@ -222,10 +216,8 @@ func TestDeleteExportHandler_Unauthorized(t *testing.T) {
 	req := httptest.NewRequest("DELETE", "/api/v1/workspaces/export?id=1", nil)
 	rr := httptest.NewRecorder()
 
-	err := DeleteExportHandler(rr, req)
-	if err != nil {
-		t.Fatalf("Handler returned error: %v", err)
-	}
+	// Use Adapter to properly handle errors
+	Adapter(DeleteExportHandler)(rr, req)
 
 	if status := rr.Code; status != http.StatusUnauthorized {
 		t.Errorf("Handler returned wrong status code: got %v want %v", status, http.StatusUnauthorized)
